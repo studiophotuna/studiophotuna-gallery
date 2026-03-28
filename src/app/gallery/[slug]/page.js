@@ -103,12 +103,16 @@ export default function GalleryPage({ params }) {
 
     burstVideoUrls.forEach((url, index) => {
       if (!url) return;
+    
+      const clean = String(url).split("?")[0].split("#")[0];
+      const ext = (clean.split(".").pop() || "mp4").toLowerCase();
+    
       slides.push({
         key: `burst-video-${index}`,
         type: "video",
         url,
         thumbUrl: gallery.final_url || photoUrls[0] || "",
-        downloadName: `burst-slot-${index + 1}.webm`,
+        downloadName: `burst-slot-${index + 1}.${ext}`,
       });
     });
 
