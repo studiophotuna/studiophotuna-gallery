@@ -3,11 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
-function getDownloadUrl(url) {
-  if (!url) return "";
-  return url.includes("?") ? `${url}&download=1` : `${url}?download=1`;
-}
-
 export default function GalleryPage({ params }) {
   const [gallery, setGallery] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,6 +10,7 @@ export default function GalleryPage({ params }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [imageVisible, setImageVisible] = useState(true);
 
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -140,6 +136,12 @@ export default function GalleryPage({ params }) {
   }, [activeIndex]);
 
   useEffect(() => {
+    setImageVisible(false);
+    const t = setTimeout(() => setImageVisible(true), 80);
+    return () => clearTimeout(t);
+  }, [activeIndex]);
+
+  useEffect(() => {
     function onKeyDown(e) {
       if (!items.length) return;
 
@@ -227,7 +229,7 @@ export default function GalleryPage({ params }) {
   }
 
   const activeItem = items[activeIndex];
-  const downloadUrl = getDownloadUrl(activeItem.url);
+  const downloadUrl = activeItem.url;
 
   return (
     <main style={styles.page}>
@@ -263,7 +265,11 @@ export default function GalleryPage({ params }) {
                 <img
                   src={activeItem.url}
                   alt="Gallery image"
-                  style={styles.image}
+                  style={{
+                    ...styles.image,
+                    opacity: imageVisible ? 1 : 0.55,
+                    transform: imageVisible ? "scale(1)" : "scale(0.985)",
+                  }}
                 />
               </button>
             </div>
@@ -298,22 +304,27 @@ export default function GalleryPage({ params }) {
               ))}
             </div>
 
-            <div style={styles.thumbnailRow}>
-              {items.map((item, index) => (
-                <button
-                  key={item.key}
-                  ref={(el) => {
-                    thumbRefs.current[index] = el;
-                  }}
-                  onClick={() => setActiveIndex(index)}
-                  style={{
-                    ...styles.thumbBtn,
-                    ...(activeIndex === index ? styles.thumbActive : {}),
-                  }}
-                >
-                  <img src={item.url} alt="" style={styles.thumbImage} />
-                </button>
-              ))}
+            <div style={styles.thumbnailOuter}>
+              <div style={styles.thumbnailFadeLeft} />
+              <div style={styles.thumbnailFadeRight} />
+
+              <div style={styles.thumbnailRow}>
+                {items.map((item, index) => (
+                  <button
+                    key={item.key}
+                    ref={(el) => {
+                      thumbRefs.current[index] = el;
+                    }}
+                    onClick={() => setActiveIndex(index)}
+                    style={{
+                      ...styles.thumbBtn,
+                      ...(activeIndex === index ? styles.thumbActive : {}),
+                    }}
+                  >
+                    <img src={item.url} alt="" style={styles.thumbImage} />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -457,6 +468,7 @@ const styles = {
     background: "#fafafa",
     border: "1px solid #ececec",
     display: "block",
+    transition: "opacity 220ms ease, transform 220ms ease",
   },
   bottomArea: {
     marginTop: "14px",
@@ -498,6 +510,30 @@ const styles = {
     width: "26px",
     background: "#111111",
   },
+  thumbnailOuter: {
+    position: "relative",
+    width: "100%",
+  },
+  thumbnailFadeLeft: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: "24px",
+    background: "linear-gradient(to right, #ffffff, rgba(255,255,255,0))",
+    pointerEvents: "none",
+    zIndex: 2,
+  },
+  thumbnailFadeRight: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: "24px",
+    background: "linear-gradient(to left, #ffffff, rgba(255,255,255,0))",
+    pointerEvents: "none",
+    zIndex: 2,
+  },
   thumbnailRow: {
     display: "flex",
     gap: "8px",
@@ -505,6 +541,7 @@ const styles = {
     padding: "8px 4px 2px",
     width: "100%",
     scrollbarWidth: "none",
+    WebkitOverflowScrolling: "touch",
   },
   thumbBtn: {
     border: "none",
@@ -517,10 +554,12 @@ const styles = {
     width: "70px",
     height: "70px",
     opacity: 0.6,
+    transition: "opacity 180ms ease, transform 180ms ease",
   },
   thumbActive: {
     opacity: 1,
     outline: "2px solid #111111",
+    transform: "scale(1.03)",
   },
   thumbImage: {
     width: "100%",
