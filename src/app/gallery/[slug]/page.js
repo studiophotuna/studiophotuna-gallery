@@ -211,7 +211,7 @@ export default function GalleryPage({ params }) {
       <div style={styles.wrapper}>
         <header style={styles.header}>
           <img
-            src="../../logo.png"
+            src="../logo.png"
             alt="Studio Photuna"
             style={styles.logo}
           />
