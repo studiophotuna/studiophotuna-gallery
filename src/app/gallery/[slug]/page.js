@@ -262,14 +262,12 @@ export default function GalleryPage({ params }) {
 
           <div style={styles.bottomArea}>
             <a
-              href={activeItem.url}
-              download={activeItem.downloadName}
-              target="_blank"
-              rel="noreferrer"
-              style={styles.downloadBtn}
-            >
-              Download
-            </a>
+  href={activeItem.url}
+  download={activeItem.downloadName}
+  style={styles.downloadBtn}
+>
+  Download
+</a>
 
             <div style={styles.dots}>
               {items.map((item, index) => (
@@ -284,6 +282,24 @@ export default function GalleryPage({ params }) {
                 />
               ))}
             </div>
+              <div style={styles.thumbnailRow}>
+  {items.map((item, index) => (
+    <button
+      key={item.key}
+      onClick={() => setActiveIndex(index)}
+      style={{
+        ...styles.thumbBtn,
+        ...(activeIndex === index ? styles.thumbActive : {}),
+      }}
+    >
+      <img
+        src={item.url}
+        alt=""
+        style={styles.thumbImage}
+      />
+    </button>
+  ))}
+</div>
           </div>
         </section>
       </div>
@@ -330,14 +346,12 @@ export default function GalleryPage({ params }) {
 
             <div style={styles.fullscreenActions}>
               <a
-                href={activeItem.url}
-                download={activeItem.downloadName}
-                target="_blank"
-                rel="noreferrer"
-                style={styles.fullscreenDownloadBtn}
-              >
-                Download
-              </a>
+  href={activeItem.url}
+  download={activeItem.downloadName}
+  style={styles.downloadBtn}
+>
+  Download
+</a>
             </div>
           </div>
 
@@ -561,4 +575,36 @@ const styles = {
     lineHeight: 1,
     cursor: "pointer",
   },
+  thumbnailRow: {
+  display: "flex",
+  gap: "8px",
+  overflowX: "auto",
+  padding: "8px 4px 2px",
+  width: "100%",
+},
+
+thumbBtn: {
+  border: "none",
+  padding: 0,
+  borderRadius: "10px",
+  overflow: "hidden",
+  background: "transparent",
+  cursor: "pointer",
+  flex: "0 0 auto",
+  width: "70px",
+  height: "70px",
+  opacity: 0.6,
+},
+
+thumbActive: {
+  opacity: 1,
+  outline: "2px solid #111",
+},
+
+thumbImage: {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  display: "block",
+},
 };
