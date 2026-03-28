@@ -3,8 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
+function getDownloadUrl(url) {
+  if (!url) return "";
+  return url.includes("?") ? `${url}&download=1` : `${url}?download=1`;
+}
+
 export default function GalleryPage({ params }) {
-  const [slug, setSlug] = useState("");
   const [gallery, setGallery] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
@@ -14,6 +18,7 @@ export default function GalleryPage({ params }) {
 
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
+  const thumbRefs = useRef([]);
 
   useEffect(() => {
     function handleResize() {
@@ -33,8 +38,6 @@ export default function GalleryPage({ params }) {
         const resolvedParams = await params;
         const resolvedSlug = resolvedParams?.slug || "";
         if (!mounted) return;
-
-        setSlug(resolvedSlug);
 
         const { data, error } = await supabase
           .from("galleries")
@@ -126,6 +129,17 @@ export default function GalleryPage({ params }) {
   }, [items, activeIndex]);
 
   useEffect(() => {
+    const activeThumb = thumbRefs.current[activeIndex];
+    if (activeThumb) {
+      activeThumb.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeIndex]);
+
+  useEffect(() => {
     function onKeyDown(e) {
       if (!items.length) return;
 
@@ -213,6 +227,7 @@ export default function GalleryPage({ params }) {
   }
 
   const activeItem = items[activeIndex];
+  const downloadUrl = getDownloadUrl(activeItem.url);
 
   return (
     <main style={styles.page}>
@@ -262,12 +277,12 @@ export default function GalleryPage({ params }) {
 
           <div style={styles.bottomArea}>
             <a
-  href={activeItem.url}
-  download={activeItem.downloadName}
-  style={styles.downloadBtn}
->
-  Download
-</a>
+              href={downloadUrl}
+              download={activeItem.downloadName}
+              style={styles.downloadBtn}
+            >
+              Download
+            </a>
 
             <div style={styles.dots}>
               {items.map((item, index) => (
@@ -282,24 +297,24 @@ export default function GalleryPage({ params }) {
                 />
               ))}
             </div>
-              <div style={styles.thumbnailRow}>
-  {items.map((item, index) => (
-    <button
-      key={item.key}
-      onClick={() => setActiveIndex(index)}
-      style={{
-        ...styles.thumbBtn,
-        ...(activeIndex === index ? styles.thumbActive : {}),
-      }}
-    >
-      <img
-        src={item.url}
-        alt=""
-        style={styles.thumbImage}
-      />
-    </button>
-  ))}
-</div>
+
+            <div style={styles.thumbnailRow}>
+              {items.map((item, index) => (
+                <button
+                  key={item.key}
+                  ref={(el) => {
+                    thumbRefs.current[index] = el;
+                  }}
+                  onClick={() => setActiveIndex(index)}
+                  style={{
+                    ...styles.thumbBtn,
+                    ...(activeIndex === index ? styles.thumbActive : {}),
+                  }}
+                >
+                  <img src={item.url} alt="" style={styles.thumbImage} />
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       </div>
@@ -346,12 +361,12 @@ export default function GalleryPage({ params }) {
 
             <div style={styles.fullscreenActions}>
               <a
-  href={activeItem.url}
-  download={activeItem.downloadName}
-  style={styles.downloadBtn}
->
-  Download
-</a>
+                href={downloadUrl}
+                download={activeItem.downloadName}
+                style={styles.fullscreenDownloadBtn}
+              >
+                Download
+              </a>
             </div>
           </div>
 
@@ -483,6 +498,36 @@ const styles = {
     width: "26px",
     background: "#111111",
   },
+  thumbnailRow: {
+    display: "flex",
+    gap: "8px",
+    overflowX: "auto",
+    padding: "8px 4px 2px",
+    width: "100%",
+    scrollbarWidth: "none",
+  },
+  thumbBtn: {
+    border: "none",
+    padding: 0,
+    borderRadius: "10px",
+    overflow: "hidden",
+    background: "transparent",
+    cursor: "pointer",
+    flex: "0 0 auto",
+    width: "70px",
+    height: "70px",
+    opacity: 0.6,
+  },
+  thumbActive: {
+    opacity: 1,
+    outline: "2px solid #111111",
+  },
+  thumbImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
   centerCard: {
     maxWidth: "560px",
     margin: "80px auto 0",
@@ -575,36 +620,4 @@ const styles = {
     lineHeight: 1,
     cursor: "pointer",
   },
-  thumbnailRow: {
-  display: "flex",
-  gap: "8px",
-  overflowX: "auto",
-  padding: "8px 4px 2px",
-  width: "100%",
-},
-
-thumbBtn: {
-  border: "none",
-  padding: 0,
-  borderRadius: "10px",
-  overflow: "hidden",
-  background: "transparent",
-  cursor: "pointer",
-  flex: "0 0 auto",
-  width: "70px",
-  height: "70px",
-  opacity: 0.6,
-},
-
-thumbActive: {
-  opacity: 1,
-  outline: "2px solid #111",
-},
-
-thumbImage: {
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
-  display: "block",
-},
 };
