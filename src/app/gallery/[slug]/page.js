@@ -3,15 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
-function formatDate(value) {
-  if (!value) return "-";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-}
-
 export default function GalleryPage({ params }) {
   const [slug, setSlug] = useState("");
   const [gallery, setGallery] = useState(null);
@@ -33,7 +24,7 @@ export default function GalleryPage({ params }) {
         const { data, error } = await supabase
           .from("galleries")
           .select(
-            "slug, final_url, final_burst_url, burst_urls, photo_urls, created_at, expires_at"
+            "slug, final_url, final_burst_url, burst_urls, photo_urls, expires_at"
           )
           .eq("slug", resolvedSlug)
           .maybeSingle();
@@ -62,6 +53,7 @@ export default function GalleryPage({ params }) {
     }
 
     loadGallery();
+
     return () => {
       mounted = false;
     };
@@ -71,41 +63,40 @@ export default function GalleryPage({ params }) {
     if (!gallery) return [];
 
     const slides = [];
-
     const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
     const burstUrls = Array.isArray(gallery.burst_urls) ? gallery.burst_urls : [];
 
     photoUrls.forEach((url, index) => {
       if (!url) return;
       slides.push({
-        type: "photo",
-        title: `Photo ${index + 1}`,
+        key: `photo-${index}`,
         url,
+        downloadName: `photo-${index + 1}.png`,
       });
     });
 
     if (gallery.final_url) {
       slides.push({
-        type: "final",
-        title: "Final Output",
+        key: "final",
         url: gallery.final_url,
+        downloadName: "final-output.png",
       });
     }
 
     if (gallery.final_burst_url) {
       slides.push({
-        type: "final_burst",
-        title: "Final Output with Burst",
+        key: "final-burst",
         url: gallery.final_burst_url,
+        downloadName: "final-output-with-burst.png",
       });
     }
 
     burstUrls.forEach((url, index) => {
       if (!url) return;
       slides.push({
-        type: "burst_slot",
-        title: `Burst Slot ${index + 1}`,
+        key: `burst-${index}`,
         url,
+        downloadName: `burst-slot-${index + 1}.png`,
       });
     });
 
@@ -113,6 +104,7 @@ export default function GalleryPage({ params }) {
   }, [gallery]);
 
   useEffect(() => {
+    if (!items.length) return;
     if (activeIndex > items.length - 1) {
       setActiveIndex(0);
     }
@@ -131,8 +123,8 @@ export default function GalleryPage({ params }) {
   if (loading) {
     return (
       <main style={styles.page}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Loading gallery...</h1>
+        <div style={styles.centerCard}>
+          <p style={styles.message}>Loading gallery...</p>
         </div>
       </main>
     );
@@ -141,9 +133,9 @@ export default function GalleryPage({ params }) {
   if (errorText) {
     return (
       <main style={styles.page}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Gallery Error</h1>
-          <p style={styles.subtext}>{errorText}</p>
+        <div style={styles.centerCard}>
+          <p style={styles.message}>Unable to load gallery.</p>
+          <p style={styles.subMessage}>{errorText}</p>
         </div>
       </main>
     );
@@ -152,10 +144,10 @@ export default function GalleryPage({ params }) {
   if (!gallery) {
     return (
       <main style={styles.page}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Gallery not found</h1>
-          <p style={styles.subtext}>
-            The link may be invalid or the gallery has not been created yet.
+        <div style={styles.centerCard}>
+          <p style={styles.message}>Gallery not found</p>
+          <p style={styles.subMessage}>
+            The link may be invalid or the gallery is not available.
           </p>
         </div>
       </main>
@@ -165,9 +157,9 @@ export default function GalleryPage({ params }) {
   if (!items.length) {
     return (
       <main style={styles.page}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>No photos available</h1>
-          <p style={styles.subtext}>This gallery does not contain images yet.</p>
+        <div style={styles.centerCard}>
+          <p style={styles.message}>No photos available</p>
+          <p style={styles.subMessage}>This gallery does not contain images yet.</p>
         </div>
       </main>
     );
@@ -178,68 +170,67 @@ export default function GalleryPage({ params }) {
   return (
     <main style={styles.page}>
       <div style={styles.wrapper}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Studio Photuna</h1>
-          <p style={styles.subtext}>Your Photo Gallery</p>
-          <p style={styles.meta}>Session: {slug}</p>
-          <p style={styles.meta}>Created: {formatDate(gallery.created_at)}</p>
-        </div>
+        <header style={styles.header}>
+          <img
+            src="/logo.png"
+            alt="Studio Photuna"
+            style={styles.logo}
+          />
+        </header>
 
-        <div style={styles.carouselCard}>
-          <div style={styles.carouselTop}>
-            <button onClick={goPrev} style={styles.arrowBtn}>
+        <section style={styles.viewerCard}>
+          <div style={styles.carouselRow}>
+            <button onClick={goPrev} style={styles.arrowBtn} aria-label="Previous image">
               ‹
             </button>
 
-            <div style={styles.imageArea}>
-              <div style={styles.imageTitle}>{activeItem.title}</div>
-
+            <div style={styles.imageWrap}>
               <a
                 href={activeItem.url}
-                download
+                download={activeItem.downloadName}
                 target="_blank"
                 rel="noreferrer"
                 style={styles.imageLink}
               >
                 <img
                   src={activeItem.url}
-                  alt={activeItem.title}
+                  alt="Gallery image"
                   style={styles.image}
                 />
               </a>
             </div>
 
-            <button onClick={goNext} style={styles.arrowBtn}>
+            <button onClick={goNext} style={styles.arrowBtn} aria-label="Next image">
               ›
             </button>
           </div>
 
-          <div style={styles.actionRow}>
+          <div style={styles.bottomArea}>
             <a
               href={activeItem.url}
-              download
+              download={activeItem.downloadName}
               target="_blank"
               rel="noreferrer"
               style={styles.downloadBtn}
             >
-              Download {activeItem.title}
+              Download
             </a>
-          </div>
 
-          <div style={styles.dots}>
-            {items.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                style={{
-                  ...styles.dot,
-                  ...(activeIndex === index ? styles.dotActive : {}),
-                }}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
+            <div style={styles.dots}>
+              {items.map((item, index) => (
+                <button
+                  key={item.key}
+                  onClick={() => setActiveIndex(index)}
+                  aria-label={`Go to image ${index + 1}`}
+                  style={{
+                    ...styles.dot,
+                    ...(activeIndex === index ? styles.dotActive : {}),
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );
@@ -248,122 +239,130 @@ export default function GalleryPage({ params }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "#f5f5f5",
-    padding: "24px 16px",
+    background: "#f4f4f5",
+    padding: "16px 12px 28px",
     fontFamily: "Arial, sans-serif",
-    display: "flex",
-    justifyContent: "center",
   },
   wrapper: {
     width: "100%",
-    maxWidth: "960px",
+    maxWidth: "920px",
+    margin: "0 auto",
   },
   header: {
-    textAlign: "center",
-    marginBottom: "20px",
-  },
-  title: {
-    margin: 0,
-    fontSize: "32px",
-    fontWeight: 700,
-    color: "#111",
-  },
-  subtext: {
-    margin: "8px 0",
-    color: "#555",
-    fontSize: "15px",
-  },
-  meta: {
-    margin: "4px 0",
-    color: "#666",
-    fontSize: "13px",
-  },
-  card: {
-    width: "100%",
-    maxWidth: "700px",
-    margin: "60px auto",
-    background: "#fff",
-    borderRadius: "16px",
-    padding: "24px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-    textAlign: "center",
-  },
-  carouselCard: {
-    background: "#fff",
-    borderRadius: "18px",
-    padding: "20px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  },
-  carouselTop: {
     display: "flex",
+    justifyContent: "center",
     alignItems: "center",
-    gap: "12px",
+    marginBottom: "14px",
+    paddingTop: "6px",
+  },
+  logo: {
+    maxWidth: "180px",
+    width: "100%",
+    height: "auto",
+    objectFit: "contain",
+  },
+  viewerCard: {
+    background: "#ffffff",
+    borderRadius: "22px",
+    padding: "14px",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+  },
+  carouselRow: {
+    display: "grid",
+    gridTemplateColumns: "44px 1fr 44px",
+    alignItems: "center",
+    gap: "10px",
   },
   arrowBtn: {
-    width: "42px",
-    height: "42px",
+    width: "44px",
+    height: "44px",
     borderRadius: "999px",
     border: "none",
-    background: "#111",
-    color: "#fff",
+    background: "#111111",
+    color: "#ffffff",
     fontSize: "28px",
+    lineHeight: 1,
     cursor: "pointer",
-    flexShrink: 0,
   },
-  imageArea: {
-    flex: 1,
-    textAlign: "center",
-  },
-  imageTitle: {
-    fontSize: "18px",
-    fontWeight: 600,
-    color: "#111",
-    marginBottom: "14px",
+  imageWrap: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   imageLink: {
     display: "block",
+    width: "100%",
     textDecoration: "none",
   },
   image: {
     width: "100%",
-    maxHeight: "72vh",
+    maxHeight: "74vh",
     objectFit: "contain",
-    borderRadius: "14px",
-    border: "1px solid #e5e5e5",
+    borderRadius: "18px",
     background: "#fafafa",
+    border: "1px solid #ececec",
+    display: "block",
   },
-  actionRow: {
+  bottomArea: {
+    marginTop: "14px",
     display: "flex",
-    justifyContent: "center",
-    marginTop: "18px",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "14px",
   },
   downloadBtn: {
-    display: "inline-block",
-    padding: "12px 18px",
-    borderRadius: "10px",
-    background: "#111",
-    color: "#fff",
+    display: "inline-flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: "170px",
+    padding: "13px 20px",
+    borderRadius: "14px",
+    background: "#111111",
+    color: "#ffffff",
     textDecoration: "none",
     fontWeight: 600,
-    fontSize: "14px",
+    fontSize: "15px",
   },
   dots: {
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: "8px",
-    marginTop: "18px",
     flexWrap: "wrap",
   },
   dot: {
-    width: "10px",
-    height: "10px",
+    width: "9px",
+    height: "9px",
     borderRadius: "999px",
     border: "none",
-    background: "#cfcfcf",
+    background: "#d4d4d8",
     cursor: "pointer",
+    padding: 0,
   },
   dotActive: {
-    background: "#111",
     width: "26px",
+    background: "#111111",
+  },
+  centerCard: {
+    maxWidth: "560px",
+    margin: "80px auto 0",
+    background: "#ffffff",
+    borderRadius: "20px",
+    padding: "28px 22px",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+    textAlign: "center",
+  },
+  message: {
+    margin: 0,
+    fontSize: "22px",
+    fontWeight: 700,
+    color: "#111111",
+  },
+  subMessage: {
+    margin: "10px 0 0",
+    color: "#666666",
+    fontSize: "14px",
+    lineHeight: 1.5,
   },
 };
