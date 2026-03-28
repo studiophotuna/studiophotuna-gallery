@@ -420,7 +420,7 @@ const styles = {
     paddingTop: "6px",
   },
   logo: {
-    maxWidth: "180px",
+    maxWidth: "240px",
     width: "100%",
     height: "auto",
     objectFit: "contain",
