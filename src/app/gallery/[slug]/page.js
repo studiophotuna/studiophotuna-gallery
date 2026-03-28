@@ -10,9 +10,20 @@ export default function GalleryPage({ params }) {
   const [errorText, setErrorText] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 768);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -149,11 +160,8 @@ export default function GalleryPage({ params }) {
     const distance = touchStartX.current - touchEndX.current;
     const threshold = 40;
 
-    if (distance > threshold) {
-      goNext();
-    } else if (distance < -threshold) {
-      goPrev();
-    }
+    if (distance > threshold) goNext();
+    else if (distance < -threshold) goPrev();
 
     touchStartX.current = null;
     touchEndX.current = null;
@@ -210,18 +218,21 @@ export default function GalleryPage({ params }) {
     <main style={styles.page}>
       <div style={styles.wrapper}>
         <header style={styles.header}>
-          <img
-            src="../logo.png"
-            alt="Studio Photuna"
-            style={styles.logo}
-          />
+          <img src="/logo.png" alt="Studio Photuna" style={styles.logo} />
         </header>
 
         <section style={styles.viewerCard}>
-          <div style={styles.carouselRow}>
-            <button onClick={goPrev} style={styles.arrowBtn} aria-label="Previous image">
-              ‹
-            </button>
+          <div
+            style={{
+              ...styles.carouselRow,
+              gridTemplateColumns: isMobile ? "1fr" : "44px 1fr 44px",
+            }}
+          >
+            {!isMobile && (
+              <button onClick={goPrev} style={styles.arrowBtn} aria-label="Previous image">
+                ‹
+              </button>
+            )}
 
             <div
               style={styles.imageWrap}
@@ -242,9 +253,11 @@ export default function GalleryPage({ params }) {
               </button>
             </div>
 
-            <button onClick={goNext} style={styles.arrowBtn} aria-label="Next image">
-              ›
-            </button>
+            {!isMobile && (
+              <button onClick={goNext} style={styles.arrowBtn} aria-label="Next image">
+                ›
+              </button>
+            )}
           </div>
 
           <div style={styles.bottomArea}>
@@ -289,17 +302,19 @@ export default function GalleryPage({ params }) {
             ×
           </button>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              goPrev();
-            }}
-            style={{ ...styles.fullscreenArrow, left: 12 }}
-            aria-label="Previous image"
-          >
-            ‹
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goPrev();
+              }}
+              style={{ ...styles.fullscreenArrow, left: 12 }}
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+          )}
 
           <div
             style={styles.fullscreenImageWrap}
@@ -326,17 +341,19 @@ export default function GalleryPage({ params }) {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              goNext();
-            }}
-            style={{ ...styles.fullscreenArrow, right: 12 }}
-            aria-label="Next image"
-          >
-            ›
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goNext();
+              }}
+              style={{ ...styles.fullscreenArrow, right: 12 }}
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          )}
         </div>
       )}
     </main>
@@ -376,7 +393,6 @@ const styles = {
   },
   carouselRow: {
     display: "grid",
-    gridTemplateColumns: "44px 1fr 44px",
     alignItems: "center",
     gap: "10px",
   },
