@@ -10,7 +10,7 @@ export default function GalleryPage({ params }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [imageVisible, setImageVisible] = useState(true);
+  const [mediaVisible, setMediaVisible] = useState(true);
 
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -37,9 +37,7 @@ export default function GalleryPage({ params }) {
 
         const { data, error } = await supabase
           .from("galleries")
-          .select(
-            "slug, final_url, final_burst_url, burst_urls, photo_urls, expires_at"
-          )
+          .select("slug, final_url, photo_urls, burst_video_urls, expires_at")
           .eq("slug", resolvedSlug)
           .maybeSingle();
 
@@ -78,13 +76,17 @@ export default function GalleryPage({ params }) {
 
     const slides = [];
     const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
-    const burstUrls = Array.isArray(gallery.burst_urls) ? gallery.burst_urls : [];
+    const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
+      ? gallery.burst_video_urls
+      : [];
 
     photoUrls.forEach((url, index) => {
       if (!url) return;
       slides.push({
         key: `photo-${index}`,
+        type: "image",
         url,
+        thumbUrl: url,
         downloadName: `photo-${index + 1}.png`,
       });
     });
@@ -92,25 +94,21 @@ export default function GalleryPage({ params }) {
     if (gallery.final_url) {
       slides.push({
         key: "final",
+        type: "image",
         url: gallery.final_url,
+        thumbUrl: gallery.final_url,
         downloadName: "final-output.png",
       });
     }
 
-    if (gallery.final_burst_url) {
-      slides.push({
-        key: "final-burst",
-        url: gallery.final_burst_url,
-        downloadName: "final-output-with-burst.png",
-      });
-    }
-
-    burstUrls.forEach((url, index) => {
+    burstVideoUrls.forEach((url, index) => {
       if (!url) return;
       slides.push({
-        key: `burst-${index}`,
+        key: `burst-video-${index}`,
+        type: "video",
         url,
-        downloadName: `burst-slot-${index + 1}.png`,
+        thumbUrl: gallery.final_url || photoUrls[0] || "",
+        downloadName: `burst-slot-${index + 1}.webm`,
       });
     });
 
@@ -136,8 +134,8 @@ export default function GalleryPage({ params }) {
   }, [activeIndex]);
 
   useEffect(() => {
-    setImageVisible(false);
-    const t = setTimeout(() => setImageVisible(true), 80);
+    setMediaVisible(false);
+    const t = setTimeout(() => setMediaVisible(true), 80);
     return () => clearTimeout(t);
   }, [activeIndex]);
 
@@ -152,7 +150,7 @@ export default function GalleryPage({ params }) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [items, activeIndex]);
+  }, [items]);
 
   function goPrev() {
     if (!items.length) return;
@@ -181,6 +179,38 @@ export default function GalleryPage({ params }) {
 
     touchStartX.current = null;
     touchEndX.current = null;
+  }
+
+  function renderMainMedia(item, fullscreen = false) {
+    const sharedStyle = fullscreen
+      ? styles.fullscreenMedia
+      : {
+          ...styles.media,
+          opacity: mediaVisible ? 1 : 0.55,
+          transform: mediaVisible ? "scale(1)" : "scale(0.985)",
+        };
+
+    if (item.type === "video") {
+      return (
+        <video
+          key={item.key}
+          src={item.url}
+          controls
+          playsInline
+          preload="metadata"
+          style={sharedStyle}
+        />
+      );
+    }
+
+    return (
+      <img
+        key={item.key}
+        src={item.url}
+        alt="Gallery media"
+        style={sharedStyle}
+      />
+    );
   }
 
   if (loading) {
@@ -221,8 +251,8 @@ export default function GalleryPage({ params }) {
     return (
       <main style={styles.page}>
         <div style={styles.centerCard}>
-          <p style={styles.message}>No photos available</p>
-          <p style={styles.subMessage}>This gallery does not contain images yet.</p>
+          <p style={styles.message}>No media available</p>
+          <p style={styles.subMessage}>This gallery does not contain content yet.</p>
         </div>
       </main>
     );
@@ -246,36 +276,28 @@ export default function GalleryPage({ params }) {
             }}
           >
             {!isMobile && (
-              <button onClick={goPrev} style={styles.arrowBtn} aria-label="Previous image">
+              <button onClick={goPrev} style={styles.arrowBtn} aria-label="Previous item">
                 ‹
               </button>
             )}
 
             <div
-              style={styles.imageWrap}
+              style={styles.mediaWrap}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
               <button
                 type="button"
                 onClick={() => setFullscreenOpen(true)}
-                style={styles.imageButton}
-                aria-label="Open fullscreen image"
+                style={styles.mediaButton}
+                aria-label="Open fullscreen"
               >
-                <img
-                  src={activeItem.url}
-                  alt="Gallery image"
-                  style={{
-                    ...styles.image,
-                    opacity: imageVisible ? 1 : 0.55,
-                    transform: imageVisible ? "scale(1)" : "scale(0.985)",
-                  }}
-                />
+                {renderMainMedia(activeItem, false)}
               </button>
             </div>
 
             {!isMobile && (
-              <button onClick={goNext} style={styles.arrowBtn} aria-label="Next image">
+              <button onClick={goNext} style={styles.arrowBtn} aria-label="Next item">
                 ›
               </button>
             )}
@@ -295,7 +317,7 @@ export default function GalleryPage({ params }) {
                 <button
                   key={item.key}
                   onClick={() => setActiveIndex(index)}
-                  aria-label={`Go to image ${index + 1}`}
+                  aria-label={`Go to item ${index + 1}`}
                   style={{
                     ...styles.dot,
                     ...(activeIndex === index ? styles.dotActive : {}),
@@ -321,7 +343,18 @@ export default function GalleryPage({ params }) {
                       ...(activeIndex === index ? styles.thumbActive : {}),
                     }}
                   >
-                    <img src={item.url} alt="" style={styles.thumbImage} />
+                    {item.type === "video" ? (
+                      <div style={styles.videoThumbWrap}>
+                        {item.thumbUrl ? (
+                          <img src={item.thumbUrl} alt="" style={styles.thumbImage} />
+                        ) : (
+                          <div style={styles.videoThumbFallback}>Video</div>
+                        )}
+                        <div style={styles.videoBadge}>▶</div>
+                      </div>
+                    ) : (
+                      <img src={item.thumbUrl || item.url} alt="" style={styles.thumbImage} />
+                    )}
                   </button>
                 ))}
               </div>
@@ -352,23 +385,19 @@ export default function GalleryPage({ params }) {
                 goPrev();
               }}
               style={{ ...styles.fullscreenArrow, left: 12 }}
-              aria-label="Previous image"
+              aria-label="Previous item"
             >
               ‹
             </button>
           )}
 
           <div
-            style={styles.fullscreenImageWrap}
+            style={styles.fullscreenMediaWrap}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <img
-              src={activeItem.url}
-              alt="Fullscreen gallery image"
-              style={styles.fullscreenImage}
-            />
+            {renderMainMedia(activeItem, true)}
 
             <div style={styles.fullscreenActions}>
               <a
@@ -389,7 +418,7 @@ export default function GalleryPage({ params }) {
                 goNext();
               }}
               style={{ ...styles.fullscreenArrow, right: 12 }}
-              aria-label="Next image"
+              aria-label="Next item"
             >
               ›
             </button>
@@ -447,20 +476,20 @@ const styles = {
     lineHeight: 1,
     cursor: "pointer",
   },
-  imageWrap: {
+  mediaWrap: {
     width: "100%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
-  imageButton: {
+  mediaButton: {
     width: "100%",
     padding: 0,
     border: "none",
     background: "transparent",
     cursor: "pointer",
   },
-  image: {
+  media: {
     width: "100%",
     maxHeight: "74vh",
     objectFit: "contain",
@@ -567,6 +596,37 @@ const styles = {
     objectFit: "cover",
     display: "block",
   },
+  videoThumbWrap: {
+    position: "relative",
+    width: "100%",
+    height: "100%",
+  },
+  videoBadge: {
+    position: "absolute",
+    right: "6px",
+    bottom: "6px",
+    width: "22px",
+    height: "22px",
+    borderRadius: "999px",
+    background: "rgba(0,0,0,0.72)",
+    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "11px",
+    fontWeight: 700,
+  },
+  videoThumbFallback: {
+    width: "100%",
+    height: "100%",
+    background: "#e5e7eb",
+    color: "#111111",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "12px",
+    fontWeight: 700,
+  },
   centerCard: {
     maxWidth: "560px",
     margin: "80px auto 0",
@@ -598,7 +658,7 @@ const styles = {
     justifyContent: "center",
     padding: "20px 12px",
   },
-  fullscreenImageWrap: {
+  fullscreenMediaWrap: {
     width: "100%",
     maxWidth: "1100px",
     display: "flex",
@@ -606,7 +666,7 @@ const styles = {
     alignItems: "center",
     gap: "16px",
   },
-  fullscreenImage: {
+  fullscreenMedia: {
     width: "100%",
     maxHeight: "78vh",
     objectFit: "contain",
