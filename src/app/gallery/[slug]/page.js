@@ -1,4 +1,4 @@
-import { supabase } from "../../../lib/supabase";
+import { getSupabaseClient } from "../../../lib/supabase";
 import GalleryClient from "./GalleryClient";
 
 export default async function GalleryPage({ params }) {
@@ -8,9 +8,21 @@ export default async function GalleryPage({ params }) {
     return <GalleryClient gallery={null} initialError="Missing gallery slug." />;
   }
 
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return (
+      <GalleryClient
+        gallery={null}
+        initialError="Gallery is missing Supabase configuration. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel."
+      />
+    );
+  }
+
   const { data, error } = await supabase
     .from("galleries")
-    .select("slug, final_url, final_video_url, photo_urls, burst_video_urls, expires_at")
+    .select(
+      "slug, final_url, final_video_url, final_burst_url, burst_video_urls, burst_urls, photo_urls, expires_at"
+    )
     .eq("slug", slug)
     .maybeSingle();
 

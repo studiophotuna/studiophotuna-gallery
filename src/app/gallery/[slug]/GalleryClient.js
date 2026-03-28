@@ -1,58 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../../../lib/supabase";
 
-export default function GalleryPage({ params }) {
-  const [gallery, setGallery] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [errorText, setErrorText] = useState("");
+export default function GalleryClient({ gallery, initialError = "" }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [gridOpen, setGridOpen] = useState(false);
   const [mediaVisible, setMediaVisible] = useState(true);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadGallery() {
-      try {
-        const resolvedParams = await params;
-        const slug = resolvedParams?.slug || "";
-
-        const { data, error } = await supabase
-          .from("galleries")
-          .select(
-            "slug, final_url, final_video_url, final_burst_url, burst_video_urls, burst_urls, photo_urls, expires_at"
-          )
-          .eq("slug", slug)
-          .maybeSingle();
-
-        if (!mounted) return;
-
-        if (error) {
-          setErrorText(error.message || "Failed to load gallery.");
-          setLoading(false);
-          return;
-        }
-
-        setGallery(data || null);
-        setLoading(false);
-      } catch (err) {
-        if (!mounted) return;
-        setErrorText(err?.message || "Failed to load gallery.");
-        setLoading(false);
-      }
-    }
-
-    loadGallery();
-
-    return () => {
-      mounted = false;
-    };
-  }, [params]);
 
   const items = useMemo(() => {
     if (!gallery) return [];
@@ -191,10 +147,8 @@ export default function GalleryPage({ params }) {
     }
   }
 
-  if (loading) return <StatusView title="Loading gallery..." />;
-
-  if (errorText) {
-    return <StatusView title="Unable to load gallery." detail={errorText} />;
+  if (initialError) {
+    return <StatusView title="Unable to load gallery." detail={initialError} />;
   }
 
   if (!gallery) {
@@ -268,7 +222,7 @@ export default function GalleryPage({ params }) {
 
       <nav style={styles.actionBar} aria-label="Gallery actions">
         <button type="button" onClick={goPrev} style={styles.iconButton} aria-label="Previous">
-          ‹
+          &lsaquo;
         </button>
         <a href={activeItem.url} download={activeItem.downloadName} style={styles.downloadBtn}>
           Download
@@ -277,7 +231,7 @@ export default function GalleryPage({ params }) {
           Share
         </button>
         <button type="button" onClick={goNext} style={styles.iconButton} aria-label="Next">
-          ›
+          &rsaquo;
         </button>
       </nav>
 
@@ -297,7 +251,7 @@ export default function GalleryPage({ params }) {
                 style={styles.closeSheetBtn}
                 aria-label="Close media list"
               >
-                ×
+                &times;
               </button>
             </div>
 
