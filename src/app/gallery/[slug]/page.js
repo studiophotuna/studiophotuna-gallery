@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
 export default function GalleryPage({ params }) {
@@ -9,6 +9,10 @@ export default function GalleryPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
+
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -110,6 +114,19 @@ export default function GalleryPage({ params }) {
     }
   }, [items, activeIndex]);
 
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (!items.length) return;
+
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "Escape") setFullscreenOpen(false);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [items, activeIndex]);
+
   function goPrev() {
     if (!items.length) return;
     setActiveIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
@@ -118,6 +135,28 @@ export default function GalleryPage({ params }) {
   function goNext() {
     if (!items.length) return;
     setActiveIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+  }
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.changedTouches[0].clientX;
+  }
+
+  function handleTouchEnd(e) {
+    touchEndX.current = e.changedTouches[0].clientX;
+
+    if (touchStartX.current == null || touchEndX.current == null) return;
+
+    const distance = touchStartX.current - touchEndX.current;
+    const threshold = 40;
+
+    if (distance > threshold) {
+      goNext();
+    } else if (distance < -threshold) {
+      goPrev();
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
   }
 
   if (loading) {
@@ -172,7 +211,7 @@ export default function GalleryPage({ params }) {
       <div style={styles.wrapper}>
         <header style={styles.header}>
           <img
-            src="/logo.png"
+            src="../../logo.png"
             alt="Studio Photuna"
             style={styles.logo}
           />
@@ -184,20 +223,23 @@ export default function GalleryPage({ params }) {
               ‹
             </button>
 
-            <div style={styles.imageWrap}>
-              <a
-                href={activeItem.url}
-                download={activeItem.downloadName}
-                target="_blank"
-                rel="noreferrer"
-                style={styles.imageLink}
+            <div
+              style={styles.imageWrap}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <button
+                type="button"
+                onClick={() => setFullscreenOpen(true)}
+                style={styles.imageButton}
+                aria-label="Open fullscreen image"
               >
                 <img
                   src={activeItem.url}
                   alt="Gallery image"
                   style={styles.image}
                 />
-              </a>
+              </button>
             </div>
 
             <button onClick={goNext} style={styles.arrowBtn} aria-label="Next image">
@@ -232,6 +274,71 @@ export default function GalleryPage({ params }) {
           </div>
         </section>
       </div>
+
+      {fullscreenOpen && (
+        <div style={styles.fullscreenOverlay} onClick={() => setFullscreenOpen(false)}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenOpen(false);
+            }}
+            style={styles.closeBtn}
+            aria-label="Close fullscreen"
+          >
+            ×
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+            style={{ ...styles.fullscreenArrow, left: 12 }}
+            aria-label="Previous image"
+          >
+            ‹
+          </button>
+
+          <div
+            style={styles.fullscreenImageWrap}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img
+              src={activeItem.url}
+              alt="Fullscreen gallery image"
+              style={styles.fullscreenImage}
+            />
+
+            <div style={styles.fullscreenActions}>
+              <a
+                href={activeItem.url}
+                download={activeItem.downloadName}
+                target="_blank"
+                rel="noreferrer"
+                style={styles.fullscreenDownloadBtn}
+              >
+                Download
+              </a>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+            style={{ ...styles.fullscreenArrow, right: 12 }}
+            aria-label="Next image"
+          >
+            ›
+          </button>
+        </div>
+      )}
     </main>
   );
 }
@@ -290,10 +397,12 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
   },
-  imageLink: {
-    display: "block",
+  imageButton: {
     width: "100%",
-    textDecoration: "none",
+    padding: 0,
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
   },
   image: {
     width: "100%",
@@ -364,5 +473,76 @@ const styles = {
     color: "#666666",
     fontSize: "14px",
     lineHeight: 1.5,
+  },
+  fullscreenOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.92)",
+    zIndex: 9999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px 12px",
+  },
+  fullscreenImageWrap: {
+    width: "100%",
+    maxWidth: "1100px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "16px",
+  },
+  fullscreenImage: {
+    width: "100%",
+    maxHeight: "78vh",
+    objectFit: "contain",
+    borderRadius: "16px",
+    display: "block",
+    background: "#111",
+  },
+  fullscreenActions: {
+    display: "flex",
+    justifyContent: "center",
+  },
+  fullscreenDownloadBtn: {
+    display: "inline-flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: "170px",
+    padding: "13px 20px",
+    borderRadius: "14px",
+    background: "#ffffff",
+    color: "#111111",
+    textDecoration: "none",
+    fontWeight: 600,
+    fontSize: "15px",
+  },
+  closeBtn: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    width: "44px",
+    height: "44px",
+    borderRadius: "999px",
+    border: "none",
+    background: "#ffffff",
+    color: "#111111",
+    fontSize: "30px",
+    lineHeight: 1,
+    cursor: "pointer",
+  },
+  fullscreenArrow: {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: "46px",
+    height: "46px",
+    borderRadius: "999px",
+    border: "none",
+    background: "#ffffff",
+    color: "#111111",
+    fontSize: "28px",
+    lineHeight: 1,
+    cursor: "pointer",
   },
 };
