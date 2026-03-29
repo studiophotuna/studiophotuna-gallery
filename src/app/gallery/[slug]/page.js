@@ -37,7 +37,7 @@ export default function GalleryPage({ params }) {
 
         const { data, error } = await supabase
           .from("galleries")
-          .select("slug, final_url, photo_urls, burst_video_urls, expires_at")
+          .select("slug, final_url, final_video_url, photo_urls, burst_video_urls, expires_at")
           .eq("slug", resolvedSlug)
           .maybeSingle();
 
@@ -72,52 +72,70 @@ export default function GalleryPage({ params }) {
   }, [params]);
 
   const items = useMemo(() => {
-    if (!gallery) return [];
+  if (!gallery) return [];
 
-    const slides = [];
-    const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
-    const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
-      ? gallery.burst_video_urls
-      : [];
+  const slides = [];
 
-    photoUrls.forEach((url, index) => {
-      if (!url) return;
-      slides.push({
-        key: `photo-${index}`,
-        type: "image",
-        url,
-        thumbUrl: url,
-        downloadName: `photo-${index + 1}.png`,
-      });
+  const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
+  const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
+    ? gallery.burst_video_urls
+    : [];
+
+  // ✅ 1. FINAL MOTION VIDEO (NEW - TOP PRIORITY)
+  if (gallery.final_video_url) {
+    const clean = String(gallery.final_video_url).split("?")[0].split("#")[0];
+    const ext = (clean.split(".").pop() || "mp4").toLowerCase();
+
+    slides.push({
+      key: "final-video",
+      type: "video",
+      url: gallery.final_video_url,
+      thumbUrl: gallery.final_url || photoUrls[0] || "",
+      downloadName: `final-motion.${ext}`,
     });
+  }
 
-    if (gallery.final_url) {
-      slides.push({
-        key: "final",
-        type: "image",
-        url: gallery.final_url,
-        thumbUrl: gallery.final_url,
-        downloadName: "final-output.png",
-      });
-    }
-
-    burstVideoUrls.forEach((url, index) => {
-      if (!url) return;
-    
-      const clean = String(url).split("?")[0].split("#")[0];
-      const ext = (clean.split(".").pop() || "mp4").toLowerCase();
-    
-      slides.push({
-        key: `burst-video-${index}`,
-        type: "video",
-        url,
-        thumbUrl: gallery.final_url || photoUrls[0] || "",
-        downloadName: `burst-slot-${index + 1}.${ext}`,
-      });
+  // ✅ 2. FINAL IMAGE
+  if (gallery.final_url) {
+    slides.push({
+      key: "final",
+      type: "image",
+      url: gallery.final_url,
+      thumbUrl: gallery.final_url,
+      downloadName: "final-output.png",
     });
+  }
 
-    return slides;
-  }, [gallery]);
+  // ✅ 3. PHOTOS
+  photoUrls.forEach((url, index) => {
+    if (!url) return;
+    slides.push({
+      key: `photo-${index}`,
+      type: "image",
+      url,
+      thumbUrl: url,
+      downloadName: `photo-${index + 1}.png`,
+    });
+  });
+
+  // ✅ 4. BURST VIDEOS
+  burstVideoUrls.forEach((url, index) => {
+    if (!url) return;
+
+    const clean = String(url).split("?")[0].split("#")[0];
+    const ext = (clean.split(".").pop() || "mp4").toLowerCase();
+
+    slides.push({
+      key: `burst-video-${index}`,
+      type: "video",
+      url,
+      thumbUrl: gallery.final_url || photoUrls[0] || "",
+      downloadName: `burst-slot-${index + 1}.${ext}`,
+    });
+  });
+
+  return slides;
+}, [gallery]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -200,6 +218,9 @@ export default function GalleryPage({ params }) {
           key={item.key}
           src={item.url}
           controls
+          autoPlay
+          loop
+          muted
           playsInline
           preload="metadata"
           style={sharedStyle}
