@@ -75,16 +75,14 @@ export default function GalleryPage({ params }) {
   if (!gallery) return [];
 
   const slides = [];
-
   const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
   const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
     ? gallery.burst_video_urls
     : [];
 
-  // ✅ 1. FINAL MOTION VIDEO (NEW - TOP PRIORITY)
   if (gallery.final_video_url) {
     const clean = String(gallery.final_video_url).split("?")[0].split("#")[0];
-    const ext = (clean.split(".").pop() || "mp4").toLowerCase();
+    const ext = (clean.split(".").pop() || "webm").toLowerCase();
 
     slides.push({
       key: "final-video",
@@ -95,7 +93,6 @@ export default function GalleryPage({ params }) {
     });
   }
 
-  // ✅ 2. FINAL IMAGE
   if (gallery.final_url) {
     slides.push({
       key: "final",
@@ -106,7 +103,6 @@ export default function GalleryPage({ params }) {
     });
   }
 
-  // ✅ 3. PHOTOS
   photoUrls.forEach((url, index) => {
     if (!url) return;
     slides.push({
@@ -118,12 +114,11 @@ export default function GalleryPage({ params }) {
     });
   });
 
-  // ✅ 4. BURST VIDEOS
   burstVideoUrls.forEach((url, index) => {
     if (!url) return;
 
     const clean = String(url).split("?")[0].split("#")[0];
-    const ext = (clean.split(".").pop() || "mp4").toLowerCase();
+    const ext = (clean.split(".").pop() || "webm").toLowerCase();
 
     slides.push({
       key: `burst-video-${index}`,
