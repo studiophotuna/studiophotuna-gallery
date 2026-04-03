@@ -1,17 +1,26 @@
+import { createClient } from "@supabase/supabase-js";
 import GalleryClient from "./GalleryClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
 export default async function GalleryPage({ params }) {
-  const resolvedParams = await params;
-  const slug = resolvedParams?.slug || "";
+  const slug = params?.slug || "";
 
   if (!slug) {
     return <GalleryClient gallery={null} initialError="Missing gallery slug." />;
   }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return (
+      <GalleryClient
+        gallery={null}
+        initialError="Supabase environment variables are missing."
+      />
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data, error } = await supabase
     .from("galleries")
@@ -20,7 +29,12 @@ export default async function GalleryPage({ params }) {
     .maybeSingle();
 
   if (error) {
-    return <GalleryClient gallery={null} initialError={error.message || "Failed to load gallery."} />;
+    return (
+      <GalleryClient
+        gallery={null}
+        initialError={error.message || "Failed to load gallery."}
+      />
+    );
   }
 
   return <GalleryClient gallery={data || null} initialError="" />;
