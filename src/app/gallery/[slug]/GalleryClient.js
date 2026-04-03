@@ -53,6 +53,9 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       label: "Final Video",
       downloadName: `final-video${getFileExtension(gallery.final_video_url, "mp4")}`,
       type: inferMediaType(gallery.final_video_url),
+    autoplay: true,
+    loop: true,
+    muted: true,
     });
   }
 
@@ -249,9 +252,12 @@ export default function GalleryClient({ gallery, initialError = "" }) {
                       key={activeItem.key}
                       src={activeItem.url}
                       style={styles.media}
-                      controls
                       playsInline
                       preload="metadata"
+                      autoPlay={activeItem.autoplay}
+                      loop={activeItem.loop}
+                      muted={activeItem.muted}
+                      controls={!activeItem.autoplay}
                       onLoadedData={() => setMainLoaded(true)}
                     />
                   ) : (
@@ -380,10 +386,12 @@ export default function GalleryClient({ gallery, initialError = "" }) {
                   key={`fullscreen-${activeItem.key}`}
                   src={activeItem.url}
                   style={styles.fullscreenMedia}
-                  controls
-                  autoPlay
                   playsInline
                   preload="metadata"
+                  autoPlay={activeItem.autoplay ?? true}
+                  loop={activeItem.loop ?? false}
+                  muted={activeItem.muted ?? false}
+                  controls={!activeItem.autoplay}
                 />
               ) : (
                 <img
