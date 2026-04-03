@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import GalleryClient from "./GalleryClient";
 
 export default async function GalleryPage({ params }) {
-  const slug = params?.slug || "";
+  const { slug = "" } = await params;
 
   if (!slug) {
     return <GalleryClient gallery={null} initialError="Missing gallery slug." />;
