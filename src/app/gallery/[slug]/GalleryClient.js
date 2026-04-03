@@ -233,53 +233,63 @@ export default function GalleryClient({ gallery, initialError = "" }) {
           </div>
 
           <div style={styles.viewerRow}>
-            <button type="button" onClick={goPrev} style={styles.arrowBtn} aria-label="Previous item">
-              ‹
-            </button>
+  <div style={styles.mediaStage} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <button
+      type="button"
+      onClick={goPrev}
+      style={{ ...styles.arrowBtn, ...styles.arrowLeft }}
+      aria-label="Previous item"
+    >
+      ‹
+    </button>
 
-            <div style={styles.mediaStage} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-              {!mainLoaded && <div style={styles.mediaSkeleton} />}
+    <button
+      type="button"
+      onClick={goNext}
+      style={{ ...styles.arrowBtn, ...styles.arrowRight }}
+      aria-label="Next item"
+    >
+      ›
+    </button>
 
-              <button
-                type="button"
-                onClick={() => setFullscreenOpen(true)}
-                style={styles.mediaButton}
-                aria-label={`Open ${activeItem.label} in fullscreen`}
-              >
-                <div style={styles.mediaFrame}>
-                  {activeItem.type === "video" ? (
-                    <video
-                      key={activeItem.key}
-                      src={activeItem.url}
-                      style={styles.media}
-                      playsInline
-                      preload="metadata"
-                      autoPlay={activeItem.autoplay}
-                      loop={activeItem.loop}
-                      muted={activeItem.muted}
-                      controls={!activeItem.autoplay}
-                      onLoadedData={() => setMainLoaded(true)}
-                    />
-                  ) : (
-                    <Image
-                      key={activeItem.key}
-                      src={activeItem.url}
-                      alt={activeItem.label}
-                      fill
-                      priority={activeIndex === 0}
-                      sizes="(max-width: 768px) 100vw, 960px"
-                      style={styles.mediaImage}
-                      onLoad={() => setMainLoaded(true)}
-                    />
-                  )}
-                </div>
-              </button>
-            </div>
+    {!mainLoaded && <div style={styles.mediaSkeleton} />}
 
-            <button type="button" onClick={goNext} style={styles.arrowBtn} aria-label="Next item">
-              ›
-            </button>
-          </div>
+    <button
+      type="button"
+      onClick={() => setFullscreenOpen(true)}
+      style={styles.mediaButton}
+      aria-label={`Open ${activeItem.label} in fullscreen`}
+    >
+      <div style={styles.mediaFrame}>
+        {activeItem.type === "video" ? (
+          <video
+            key={activeItem.key}
+            src={activeItem.url}
+            style={styles.media}
+            playsInline
+            preload="metadata"
+            autoPlay={activeItem.autoplay}
+            loop={activeItem.loop}
+            muted={activeItem.muted}
+            controls={!activeItem.autoplay}
+            onLoadedData={() => setMainLoaded(true)}
+          />
+        ) : (
+          <Image
+            key={activeItem.key}
+            src={activeItem.url}
+            alt={activeItem.label}
+            fill
+            priority={activeIndex === 0}
+            sizes="(max-width: 768px) 100vw, 960px"
+            style={styles.mediaImage}
+            onLoad={() => setMainLoaded(true)}
+          />
+        )}
+      </div>
+    </button>
+  </div>
+</div>
 
           <div style={styles.thumbSection}>
             <div style={styles.thumbHeader}>
@@ -457,23 +467,25 @@ const styles = {
     position: "relative",
     minHeight: "100vh",
     background: "linear-gradient(180deg, #f8f9fb 0%, #f3f4f6 42%, #eef1f4 100%)",
-    padding: "20px 14px 40px",
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    padding: "12px 10px 28px",
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     overflow: "hidden",
   },
   shellGradient: {
     position: "absolute",
     inset: "0 auto auto 50%",
     transform: "translateX(-50%)",
-    width: "1200px",
-    height: "320px",
-    background: "radial-gradient(circle at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 72%)",
+    width: "900px",
+    height: "220px",
+    background:
+      "radial-gradient(circle at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 72%)",
     pointerEvents: "none",
   },
   wrapper: {
     position: "relative",
     width: "100%",
-    maxWidth: "1100px",
+    maxWidth: "1040px",
     margin: "0 auto",
     zIndex: 1,
   },
@@ -481,41 +493,41 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: "18px",
-    paddingTop: "6px",
+    marginBottom: "12px",
+    paddingTop: "4px",
   },
   logo: {
-    maxWidth: "220px",
+    maxWidth: "160px",
     width: "100%",
     height: "auto",
     objectFit: "contain",
     filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.05))",
   },
   viewerCard: {
-    background: "rgba(255,255,255,0.82)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    borderRadius: "30px",
-    padding: "22px",
+    background: "rgba(255,255,255,0.88)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    borderRadius: "22px",
+    padding: "14px",
     border: "1px solid rgba(17,17,17,0.06)",
-    boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)",
+    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.08)",
   },
   topBar: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: "16px",
-    flexWrap: "wrap",
-    marginBottom: "18px",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: "12px",
+    marginBottom: "14px",
   },
   topBarLeft: {
     display: "flex",
     flexDirection: "column",
     gap: "6px",
+    minWidth: 0,
   },
   kicker: {
     margin: 0,
-    fontSize: "11px",
+    fontSize: "10px",
     fontWeight: 700,
     letterSpacing: "0.14em",
     textTransform: "uppercase",
@@ -523,18 +535,19 @@ const styles = {
   },
   title: {
     margin: 0,
-    fontSize: "clamp(24px, 3vw, 34px)",
+    fontSize: "22px",
     lineHeight: 1.08,
     color: "#111827",
     letterSpacing: "-0.03em",
+    wordBreak: "break-word",
   },
   metaRow: {
     display: "flex",
     alignItems: "center",
     flexWrap: "wrap",
-    gap: "8px",
+    gap: "6px",
     color: "#6b7280",
-    fontSize: "14px",
+    fontSize: "13px",
   },
   counter: {
     fontWeight: 600,
@@ -552,16 +565,16 @@ const styles = {
   },
   topActions: {
     display: "flex",
-    alignItems: "center",
-    gap: "10px",
+    width: "100%",
   },
   downloadBtn: {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: "150px",
-    height: "46px",
-    padding: "0 18px",
+    width: "100%",
+    minWidth: 0,
+    height: "44px",
+    padding: "0 16px",
     borderRadius: "999px",
     background: "#111827",
     color: "#ffffff",
@@ -569,25 +582,35 @@ const styles = {
     fontWeight: 700,
     fontSize: "14px",
     letterSpacing: "-0.01em",
-    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.16)",
+    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.14)",
   },
   viewerRow: {
     display: "grid",
-    gridTemplateColumns: "48px minmax(0, 1fr) 48px",
+    gridTemplateColumns: "1fr",
     alignItems: "center",
-    gap: "14px",
+    gap: "10px",
   },
   arrowBtn: {
-    width: "48px",
-    height: "48px",
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: "40px",
+    height: "40px",
     borderRadius: "999px",
     border: "1px solid rgba(17,24,39,0.08)",
     background: "rgba(255,255,255,0.94)",
     color: "#111827",
-    fontSize: "28px",
+    fontSize: "24px",
     lineHeight: 1,
     cursor: "pointer",
     boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
+    zIndex: 3,
+  },
+  arrowLeft: {
+    left: "10px",
+  },
+  arrowRight: {
+    right: "10px",
   },
   mediaStage: {
     position: "relative",
@@ -604,9 +627,9 @@ const styles = {
   mediaFrame: {
     position: "relative",
     width: "100%",
-    minHeight: "420px",
+    minHeight: "300px",
     aspectRatio: "4 / 5",
-    borderRadius: "24px",
+    borderRadius: "18px",
     overflow: "hidden",
     background: "linear-gradient(180deg, rgba(249,250,251,1) 0%, rgba(243,244,246,1) 100%)",
     border: "1px solid rgba(17,24,39,0.06)",
@@ -615,8 +638,9 @@ const styles = {
   mediaSkeleton: {
     position: "absolute",
     inset: 0,
-    borderRadius: "24px",
-    background: "linear-gradient(90deg, rgba(243,244,246,1) 25%, rgba(229,231,235,1) 37%, rgba(243,244,246,1) 63%)",
+    borderRadius: "18px",
+    background:
+      "linear-gradient(90deg, rgba(243,244,246,1) 25%, rgba(229,231,235,1) 37%, rgba(243,244,246,1) 63%)",
     backgroundSize: "400% 100%",
     animation: "shimmer 1.4s ease infinite",
     zIndex: 1,
@@ -632,25 +656,24 @@ const styles = {
     objectFit: "contain",
   },
   thumbSection: {
-    marginTop: "20px",
-    paddingTop: "18px",
+    marginTop: "16px",
+    paddingTop: "14px",
     borderTop: "1px solid rgba(17,24,39,0.06)",
   },
   thumbHeader: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginBottom: "12px",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "4px",
+    marginBottom: "10px",
   },
   thumbHeaderTitle: {
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: 700,
     color: "#111827",
   },
   thumbHeaderSubtext: {
-    fontSize: "13px",
+    fontSize: "12px",
     color: "#6b7280",
   },
   thumbnailOuter: {
@@ -662,8 +685,8 @@ const styles = {
     left: 0,
     top: 0,
     bottom: 0,
-    width: "26px",
-    background: "linear-gradient(to right, rgba(255,255,255,0.9), rgba(255,255,255,0))",
+    width: "18px",
+    background: "linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0))",
     pointerEvents: "none",
     zIndex: 2,
   },
@@ -672,16 +695,16 @@ const styles = {
     right: 0,
     top: 0,
     bottom: 0,
-    width: "26px",
-    background: "linear-gradient(to left, rgba(255,255,255,0.9), rgba(255,255,255,0))",
+    width: "18px",
+    background: "linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0))",
     pointerEvents: "none",
     zIndex: 2,
   },
   thumbnailRow: {
     display: "flex",
-    gap: "12px",
+    gap: "10px",
     overflowX: "auto",
-    padding: "4px 2px 6px",
+    padding: "2px 2px 6px",
     scrollbarWidth: "none",
     WebkitOverflowScrolling: "touch",
   },
@@ -691,11 +714,11 @@ const styles = {
     padding: 0,
     cursor: "pointer",
     flex: "0 0 auto",
-    width: "86px",
+    width: "72px",
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
-    opacity: 0.72,
+    gap: "6px",
+    opacity: 0.78,
     transition: "transform 180ms ease, opacity 180ms ease",
   },
   thumbActive: {
@@ -704,9 +727,9 @@ const styles = {
   },
   thumbFrame: {
     position: "relative",
-    width: "86px",
-    height: "86px",
-    borderRadius: "18px",
+    width: "72px",
+    height: "72px",
+    borderRadius: "14px",
     overflow: "hidden",
     background: "#f3f4f6",
     border: "1px solid rgba(17,24,39,0.08)",
@@ -717,7 +740,7 @@ const styles = {
   },
   thumbCaption: {
     display: "block",
-    fontSize: "12px",
+    fontSize: "11px",
     lineHeight: 1.25,
     fontWeight: 600,
     color: "#374151",
@@ -735,30 +758,30 @@ const styles = {
     gap: "4px",
   },
   videoThumbIcon: {
-    fontSize: "18px",
+    fontSize: "16px",
     lineHeight: 1,
   },
   videoThumbLabel: {
-    fontSize: "11px",
+    fontSize: "10px",
     fontWeight: 700,
     letterSpacing: "0.04em",
     textTransform: "uppercase",
   },
   stateCard: {
-    maxWidth: "600px",
-    margin: "100px auto 0",
-    background: "rgba(255,255,255,0.85)",
+    maxWidth: "560px",
+    margin: "80px auto 0",
+    background: "rgba(255,255,255,0.88)",
     backdropFilter: "blur(10px)",
     WebkitBackdropFilter: "blur(10px)",
-    borderRadius: "28px",
+    borderRadius: "22px",
     border: "1px solid rgba(17,24,39,0.06)",
     boxShadow: "0 24px 60px rgba(15, 23, 42, 0.08)",
-    padding: "32px 24px",
+    padding: "24px 18px",
     textAlign: "center",
   },
   stateTitle: {
     margin: 0,
-    fontSize: "26px",
+    fontSize: "22px",
     lineHeight: 1.1,
     fontWeight: 800,
     color: "#111827",
@@ -767,63 +790,62 @@ const styles = {
   stateText: {
     margin: "10px 0 0",
     color: "#6b7280",
-    fontSize: "15px",
+    fontSize: "14px",
     lineHeight: 1.6,
   },
   fullscreenOverlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(2, 6, 23, 0.92)",
+    background: "rgba(2, 6, 23, 0.94)",
     zIndex: 9999,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "24px 16px",
+    padding: "14px 10px",
   },
   fullscreenContent: {
     width: "100%",
     maxWidth: "1200px",
     display: "flex",
     flexDirection: "column",
-    gap: "16px",
+    gap: "12px",
   },
   fullscreenTopBar: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    gap: "12px",
-    flexWrap: "wrap",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "6px",
     color: "#fff",
   },
   fullscreenKicker: {
     margin: 0,
-    fontSize: "11px",
+    fontSize: "10px",
     fontWeight: 700,
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     color: "rgba(255,255,255,0.66)",
   },
   fullscreenTitle: {
-    margin: "6px 0 0",
-    fontSize: "clamp(22px, 3vw, 30px)",
+    margin: "4px 0 0",
+    fontSize: "22px",
     lineHeight: 1.08,
     letterSpacing: "-0.03em",
   },
   fullscreenCounter: {
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: 700,
     color: "rgba(255,255,255,0.86)",
   },
   fullscreenFrame: {
     width: "100%",
-    borderRadius: "24px",
+    borderRadius: "18px",
     overflow: "hidden",
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
   },
   fullscreenMedia: {
     width: "100%",
-    maxHeight: "76vh",
+    maxHeight: "72vh",
     objectFit: "contain",
     display: "block",
     background: "transparent",
@@ -836,9 +858,11 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: "160px",
-    height: "46px",
-    padding: "0 18px",
+    width: "100%",
+    maxWidth: "240px",
+    minWidth: 0,
+    height: "42px",
+    padding: "0 16px",
     borderRadius: "999px",
     background: "#ffffff",
     color: "#111827",
@@ -848,30 +872,32 @@ const styles = {
   },
   closeBtn: {
     position: "absolute",
-    top: 18,
-    right: 18,
-    width: "48px",
-    height: "48px",
+    top: 12,
+    right: 12,
+    width: "42px",
+    height: "42px",
     borderRadius: "999px",
     border: "1px solid rgba(255,255,255,0.14)",
     background: "rgba(255,255,255,0.96)",
     color: "#111827",
-    fontSize: "30px",
+    fontSize: "26px",
     lineHeight: 1,
     cursor: "pointer",
+    zIndex: 5,
   },
   fullscreenArrow: {
     position: "absolute",
     top: "50%",
     transform: "translateY(-50%)",
-    width: "52px",
-    height: "52px",
+    width: "42px",
+    height: "42px",
     borderRadius: "999px",
     border: "1px solid rgba(255,255,255,0.14)",
     background: "rgba(255,255,255,0.96)",
     color: "#111827",
-    fontSize: "30px",
+    fontSize: "24px",
     lineHeight: 1,
     cursor: "pointer",
+    zIndex: 5,
   },
 };
