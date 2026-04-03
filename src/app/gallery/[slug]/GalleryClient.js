@@ -45,16 +45,16 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       });
     }
 
-    if (gallery.final_burst_url) {
-      slides.push({
-        key: "final-burst",
-        url: gallery.final_burst_url,
-        thumbUrl: gallery.final_burst_url,
-        label: "Final Motion",
-        downloadName: `final-motion${getFileExtension(gallery.final_burst_url, "webm")}`,
-        type: inferMediaType(gallery.final_burst_url),
-      });
-    }
+    if (gallery.final_video_url) {
+    slides.push({
+      key: "final-video",
+      url: gallery.final_video_url,
+      thumbUrl: gallery.final_url || gallery.photo_urls?.[0] || "",
+      label: "Final Video",
+      downloadName: `final-video${getFileExtension(gallery.final_video_url, "mp4")}`,
+      type: inferMediaType(gallery.final_video_url),
+    });
+  }
 
     burstUrls.forEach((url, index) => {
       if (!url) return;
