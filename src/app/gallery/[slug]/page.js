@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../../../lib/supabase";
 import GalleryClient from "./GalleryClient";
 
 export default async function GalleryPage({ params }) {
