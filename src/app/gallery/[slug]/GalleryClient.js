@@ -219,13 +219,6 @@ export default function GalleryClient({ gallery, initialError = "" }) {
         </header>
 
         <section style={styles.heroCard}>
-          <div style={styles.heroMetaRow}>
-            <div style={styles.heroPill}>QR Gallery</div>
-            <div style={styles.heroPill}>{shotCount} Shots</div>
-            <div style={styles.heroPill}>{items.length} Media</div>
-            {isExpired ? <div style={styles.heroPillWarning}>Expired</div> : null}
-          </div>
-
           <div style={styles.topBar}>
             <div style={styles.topBarLeft}>
               <div style={styles.labelRow}>
@@ -234,7 +227,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
               </div>
               <h2 style={styles.title}>{activeItem.label}</h2>
               <p style={styles.description}>
-                Tap the preview to open fullscreen, or download the selected item directly.
+                tap, swipe, save ✨
               </p>
             </div>
 
@@ -306,28 +299,6 @@ export default function GalleryClient({ gallery, initialError = "" }) {
             </div>
 
             <aside style={styles.sidePanel}>
-              <div style={styles.sideCard}>
-                <p style={styles.sideCardLabel}>Session Preview</p>
-                <div style={styles.sideInfoList}>
-                  <div style={styles.sideInfoItem}>
-                    <span style={styles.sideInfoKey}>Current type</span>
-                    <span style={styles.sideInfoValue}>{activeItem.type === "video" ? "Video" : "Image"}</span>
-                  </div>
-                  <div style={styles.sideInfoItem}>
-                    <span style={styles.sideInfoKey}>Best for</span>
-                    <span style={styles.sideInfoValue}>
-                      {activeItem.key === "final"
-                        ? "Printing / sharing"
-                        : activeItem.key === "final-video"
-                        ? "Social posting"
-                        : activeItem.key.includes("burst")
-                        ? "Motion preview"
-                        : "Raw memory"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               <div style={styles.sideCard}>
                 <div style={styles.thumbHeader}>
                   <span style={styles.thumbHeaderTitle}>Session Media</span>
@@ -513,8 +484,8 @@ const styles = {
     position: "relative",
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, rgba(255,225,236,0.55) 0%, rgba(255,255,255,0) 30%), linear-gradient(180deg, #fff8fb 0%, #f7f4ff 40%, #f4f7fb 100%)",
-    padding: "16px 12px 32px",
+      "radial-gradient(circle at top, rgba(255,225,236,0.48) 0%, rgba(255,255,255,0) 28%), linear-gradient(180deg, #fff9fb 0%, #f7f5ff 42%, #f4f7fb 100%)",
+    padding: "14px 12px 28px",
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     overflow: "hidden",
@@ -524,51 +495,51 @@ const styles = {
     top: -120,
     left: "50%",
     transform: "translateX(-50%)",
-    width: 780,
-    height: 320,
+    width: 760,
+    height: 280,
     borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0))",
+    background: "radial-gradient(circle, rgba(255,255,255,0.94), rgba(255,255,255,0))",
     pointerEvents: "none",
   },
   bgGlowBottom: {
     position: "absolute",
-    right: -120,
+    right: -100,
     bottom: -120,
-    width: 320,
-    height: 320,
+    width: 260,
+    height: 260,
     borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(235,240,255,0.9), rgba(235,240,255,0))",
+    background: "radial-gradient(circle, rgba(236,240,255,0.78), rgba(236,240,255,0))",
     pointerEvents: "none",
   },
   wrapper: {
     position: "relative",
     width: "100%",
-    maxWidth: 1220,
+    maxWidth: 1120,
     margin: "0 auto",
     zIndex: 1,
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   brandWrap: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     textAlign: "center",
   },
   logo: {
     width: "100%",
-    maxWidth: 168,
+    maxWidth: 152,
     height: "auto",
     objectFit: "contain",
-    filter: "drop-shadow(0 12px 28px rgba(0,0,0,0.08))",
+    filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.08))",
   },
   brandTextWrap: {
     display: "flex",
     flexDirection: "column",
-    gap: 6,
-    maxWidth: 720,
+    gap: 4,
+    maxWidth: 560,
   },
   brandEyebrow: {
     margin: 0,
@@ -580,106 +551,86 @@ const styles = {
   },
   brandTitle: {
     margin: 0,
-    fontSize: "clamp(26px, 4vw, 42px)",
-    lineHeight: 1.02,
-    letterSpacing: "-0.04em",
+    fontSize: "clamp(26px, 4vw, 40px)",
+    lineHeight: 1,
+    letterSpacing: "-0.045em",
     color: "#231a2c",
   },
   brandSubtext: {
     margin: 0,
-    fontSize: 14,
-    lineHeight: 1.7,
-    color: "#6b7280",
+    fontSize: 13,
+    lineHeight: 1.6,
+    color: "#7a7f8a",
   },
   heroCard: {
-    background: "rgba(255,255,255,0.78)",
-    backdropFilter: "blur(18px)",
-    WebkitBackdropFilter: "blur(18px)",
-    borderRadius: 28,
-    padding: 16,
-    border: "1px solid rgba(35,26,44,0.08)",
-    boxShadow: "0 20px 60px rgba(31, 41, 55, 0.10)",
+    background: "rgba(255,255,255,0.74)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    borderRadius: 26,
+    padding: 14,
+    border: "1px solid rgba(35,26,44,0.06)",
+    boxShadow: "0 16px 44px rgba(31, 41, 55, 0.08)",
   },
   heroMetaRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
+    display: "none",
   },
   heroPill: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 32,
-    padding: "0 12px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.88)",
-    border: "1px solid rgba(35,26,44,0.08)",
-    fontSize: 12,
-    fontWeight: 700,
-    color: "#4b5563",
+    display: "none",
   },
   heroPillWarning: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 32,
-    padding: "0 12px",
-    borderRadius: 999,
-    background: "rgba(255,244,230,1)",
-    border: "1px solid rgba(245,158,11,0.2)",
-    fontSize: 12,
-    fontWeight: 800,
-    color: "#b45309",
+    display: "none",
   },
   topBar: {
     display: "flex",
     flexDirection: "column",
-    gap: 14,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 14,
   },
   topBarLeft: {
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: 6,
+    alignItems: "center",
+    textAlign: "center",
   },
   labelRow: {
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     flexWrap: "wrap",
   },
   activeBadge: {
     display: "inline-flex",
     alignItems: "center",
-    minHeight: 28,
+    minHeight: 26,
     padding: "0 10px",
     borderRadius: 999,
-    background: "linear-gradient(135deg, #1f2937 0%, #374151 100%)",
+    background: "rgba(17,24,39,0.92)",
     color: "#fff",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 800,
     textTransform: "uppercase",
-    letterSpacing: "0.08em",
+    letterSpacing: "0.1em",
   },
   counter: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 700,
-    color: "#6b7280",
+    color: "#8a8f98",
   },
   title: {
     margin: 0,
-    fontSize: "clamp(24px, 3vw, 34px)",
-    lineHeight: 1.04,
+    fontSize: "clamp(22px, 3vw, 30px)",
+    lineHeight: 1.02,
     color: "#111827",
-    letterSpacing: "-0.04em",
+    letterSpacing: "-0.045em",
   },
   description: {
     margin: 0,
-    fontSize: 14,
-    lineHeight: 1.7,
-    color: "#6b7280",
-    maxWidth: 580,
+    fontSize: 13,
+    lineHeight: 1.55,
+    color: "#7a7f8a",
+    maxWidth: 420,
   },
   topActions: {
     display: "flex",
@@ -690,19 +641,19 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    minHeight: 48,
+    minHeight: 46,
     borderRadius: 999,
-    background: "linear-gradient(135deg, #111827 0%, #374151 100%)",
+    background: "linear-gradient(135deg, #111827 0%, #2b3444 100%)",
     color: "#ffffff",
     textDecoration: "none",
     fontWeight: 800,
     fontSize: 14,
-    boxShadow: "0 14px 30px rgba(17, 24, 39, 0.18)",
+    boxShadow: "0 12px 24px rgba(17, 24, 39, 0.14)",
   },
   viewerGrid: {
     display: "grid",
     gridTemplateColumns: "1fr",
-    gap: 16,
+    gap: 12,
   },
   mediaStage: {
     position: "relative",
@@ -712,23 +663,23 @@ const styles = {
     position: "absolute",
     top: "50%",
     transform: "translateY(-50%)",
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 999,
-    border: "1px solid rgba(17,24,39,0.08)",
-    background: "rgba(255,255,255,0.96)",
+    border: "1px solid rgba(17,24,39,0.06)",
+    background: "rgba(255,255,255,0.94)",
     color: "#111827",
     fontSize: 24,
     lineHeight: 1,
     cursor: "pointer",
-    boxShadow: "0 14px 30px rgba(15, 23, 42, 0.12)",
+    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.10)",
     zIndex: 3,
   },
   arrowLeft: {
-    left: 10,
+    left: 8,
   },
   arrowRight: {
-    right: 10,
+    right: 8,
   },
   mediaButton: {
     display: "block",
@@ -739,26 +690,25 @@ const styles = {
     cursor: "pointer",
   },
   mediaFrameOuter: {
-    padding: 10,
-    borderRadius: 28,
-    background:
-      "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(247,244,255,0.92) 100%)",
-    border: "1px solid rgba(17,24,39,0.06)",
-    boxShadow: "0 20px 50px rgba(17, 24, 39, 0.10)",
+    padding: 8,
+    borderRadius: 24,
+    background: "rgba(255,255,255,0.84)",
+    border: "1px solid rgba(17,24,39,0.05)",
+    boxShadow: "0 16px 36px rgba(17, 24, 39, 0.08)",
   },
   mediaFrameInner: {
     position: "relative",
     width: "100%",
     minHeight: 320,
     aspectRatio: "4 / 5",
-    borderRadius: 22,
+    borderRadius: 18,
     overflow: "hidden",
     background: "linear-gradient(180deg, #fbfbfd 0%, #f3f4f6 100%)",
   },
   mediaSkeleton: {
     position: "absolute",
-    inset: 10,
-    borderRadius: 22,
+    inset: 8,
+    borderRadius: 18,
     background:
       "linear-gradient(90deg, rgba(243,244,246,1) 25%, rgba(229,231,235,1) 37%, rgba(243,244,246,1) 63%)",
     backgroundSize: "400% 100%",
@@ -777,88 +727,72 @@ const styles = {
   },
   sidePanel: {
     display: "grid",
-    gap: 14,
-  },
-  sideCard: {
-    background: "rgba(255,255,255,0.86)",
-    border: "1px solid rgba(17,24,39,0.06)",
-    borderRadius: 22,
-    padding: 14,
-    boxShadow: "0 12px 30px rgba(17, 24, 39, 0.06)",
-  },
-  sideCardLabel: {
-    margin: "0 0 10px",
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    color: "#9a6b84",
-  },
-  sideInfoList: {
-    display: "grid",
     gap: 10,
   },
-  sideInfoItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    padding: "10px 12px",
-    borderRadius: 16,
-    background: "#f9fafb",
+  sideCard: {
+    background: "rgba(255,255,255,0.72)",
     border: "1px solid rgba(17,24,39,0.05)",
+    borderRadius: 20,
+    padding: 12,
+    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.05)",
+  },
+  sideCardLabel: {
+    display: "none",
+  },
+  sideInfoList: {
+    display: "none",
+  },
+  sideInfoItem: {
+    display: "none",
   },
   sideInfoKey: {
-    fontSize: 13,
-    color: "#6b7280",
+    display: "none",
   },
   sideInfoValue: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: "#111827",
-    textAlign: "right",
+    display: "none",
   },
   thumbHeader: {
     display: "flex",
     flexDirection: "column",
-    gap: 4,
-    marginBottom: 12,
+    gap: 2,
+    marginBottom: 10,
   },
   thumbHeaderTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 800,
     color: "#111827",
   },
   thumbHeaderSubtext: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 11,
+    color: "#8a8f98",
   },
   thumbnailGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 10,
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: 8,
   },
   thumbBtn: {
-    border: "1px solid rgba(17,24,39,0.06)",
+    border: "1px solid rgba(17,24,39,0.05)",
     background: "#fff",
-    borderRadius: 18,
-    padding: 8,
+    borderRadius: 16,
+    padding: 6,
     cursor: "pointer",
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: 6,
     textAlign: "left",
-    boxShadow: "0 10px 22px rgba(17, 24, 39, 0.05)",
+    boxShadow: "0 8px 18px rgba(17, 24, 39, 0.04)",
   },
   thumbActive: {
-    border: "1px solid rgba(17,24,39,0.16)",
+    border: "1px solid rgba(17,24,39,0.14)",
     transform: "translateY(-1px)",
-    boxShadow: "0 14px 30px rgba(17, 24, 39, 0.10)",
+    boxShadow: "0 12px 24px rgba(17, 24, 39, 0.08)",
   },
   thumbFrame: {
     position: "relative",
     width: "100%",
     aspectRatio: "1 / 1",
-    borderRadius: 14,
+    borderRadius: 12,
     overflow: "hidden",
     background: "#f3f4f6",
   },
@@ -868,17 +802,17 @@ const styles = {
   thumbTextWrap: {
     display: "flex",
     flexDirection: "column",
-    gap: 2,
+    gap: 1,
   },
   thumbCaption: {
-    fontSize: 12,
-    lineHeight: 1.3,
+    fontSize: 11,
+    lineHeight: 1.25,
     fontWeight: 700,
     color: "#111827",
   },
   thumbSubcaption: {
-    fontSize: 11,
-    color: "#6b7280",
+    fontSize: 10,
+    color: "#8a8f98",
   },
   videoThumb: {
     width: "100%",
@@ -889,14 +823,14 @@ const styles = {
     justifyContent: "center",
     background: "linear-gradient(180deg, #1f2937 0%, #111827 100%)",
     color: "#fff",
-    gap: 6,
+    gap: 5,
   },
   videoThumbIcon: {
-    fontSize: 18,
+    fontSize: 16,
     lineHeight: 1,
   },
   videoThumbLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 800,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
@@ -960,8 +894,8 @@ const styles = {
   },
   fullscreenTitle: {
     margin: "4px 0 0",
-    fontSize: 24,
-    lineHeight: 1.08,
+    fontSize: 22,
+    lineHeight: 1.05,
     letterSpacing: "-0.03em",
   },
   fullscreenFrame: {
