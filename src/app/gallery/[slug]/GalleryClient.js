@@ -210,7 +210,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
             <img src="/logo.png" alt="Studio Photuna" style={styles.logo} />
             <div style={styles.brandTextWrap}>
               <p style={styles.brandEyebrow}>Photo Booth Gallery</p>
-              <h1 style={styles.brandTitle}>Your Moments, Ready to Save</h1>
+              <h1 style={styles.brandTitle}>Ahead of the moment.</h1>
               <p style={styles.brandSubtext}>
                 Preview the raw shots, final layout, and motion output from your session.
               </p>
@@ -226,38 +226,30 @@ export default function GalleryClient({ gallery, initialError = "" }) {
                 <span style={styles.counter}>{activeIndex + 1} / {items.length}</span>
               </div>
               <h2 style={styles.title}>{activeItem.label}</h2>
-              <p style={styles.description}>
-                tap, swipe, save ✨
-              </p>
             </div>
 
             <div style={styles.topActions}>
               <a href={activeItem.url} download={activeItem.downloadName} style={styles.downloadBtn}>
-                Download Selected
+                Save
               </a>
             </div>
           </div>
 
-          <div style={styles.viewerGrid}>
-            <div style={styles.mediaStage} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-              <button
-                type="button"
-                onClick={goPrev}
-                style={{ ...styles.arrowBtn, ...styles.arrowLeft }}
-                aria-label="Previous item"
-              >
-                ‹
-              </button>
+          <div style={styles.carouselShell}>
+            <button
+              type="button"
+              onClick={goPrev}
+              style={{ ...styles.arrowBtn, ...styles.arrowLeft }}
+              aria-label="Previous item"
+            >
+              ‹
+            </button>
 
-              <button
-                type="button"
-                onClick={goNext}
-                style={{ ...styles.arrowBtn, ...styles.arrowRight }}
-                aria-label="Next item"
-              >
-                ›
-              </button>
-
+            <div
+              style={styles.carouselViewport}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {!mainLoaded && <div style={styles.mediaSkeleton} />}
 
               <button
@@ -266,92 +258,61 @@ export default function GalleryClient({ gallery, initialError = "" }) {
                 style={styles.mediaButton}
                 aria-label={`Open ${activeItem.label} in fullscreen`}
               >
-                <div style={styles.mediaFrameOuter}>
-                  <div style={styles.mediaFrameInner}>
-                    {activeItem.type === "video" ? (
-                      <video
-                        key={activeItem.key}
-                        src={activeItem.url}
-                        style={styles.media}
-                        playsInline
-                        preload="metadata"
-                        autoPlay={activeItem.autoplay}
-                        loop={activeItem.loop}
-                        muted={activeItem.muted}
-                        controls={!activeItem.autoplay}
-                        onLoadedData={() => setMainLoaded(true)}
-                      />
-                    ) : (
-                      <Image
-                        key={activeItem.key}
-                        src={activeItem.url}
-                        alt={activeItem.label}
-                        fill
-                        priority={activeIndex === 0}
-                        sizes="(max-width: 768px) 100vw, 960px"
-                        style={styles.mediaImage}
-                        onLoad={() => setMainLoaded(true)}
-                      />
-                    )}
-                  </div>
-                </div>
+                {activeItem.type === "video" ? (
+                  <video
+                    key={activeItem.key}
+                    src={activeItem.url}
+                    style={styles.carouselMedia}
+                    playsInline
+                    preload="metadata"
+                    autoPlay={activeItem.autoplay}
+                    loop={activeItem.loop}
+                    muted={activeItem.muted}
+                    controls={!activeItem.autoplay}
+                    onLoadedData={() => setMainLoaded(true)}
+                  />
+                ) : (
+                  <Image
+                    key={activeItem.key}
+                    src={activeItem.url}
+                    alt={activeItem.label}
+                    fill
+                    priority={activeIndex === 0}
+                    sizes="100vw"
+                    style={styles.carouselImage}
+                    onLoad={() => setMainLoaded(true)}
+                  />
+                )}
               </button>
             </div>
 
-            <aside style={styles.sidePanel}>
-              <div style={styles.sideCard}>
-                <div style={styles.thumbHeader}>
-                  <span style={styles.thumbHeaderTitle}>Session Media</span>
-                  <span style={styles.thumbHeaderSubtext}>Select any frame below</span>
-                </div>
+            <button
+              type="button"
+              onClick={goNext}
+              style={{ ...styles.arrowBtn, ...styles.arrowRight }}
+              aria-label="Next item"
+            >
+              ›
+            </button>
+          </div>
 
-                <div style={styles.thumbnailGrid}>
-                  {items.map((item, index) => {
-                    const active = index === activeIndex;
-
-                    return (
-                      <button
-                        key={item.key}
-                        ref={(el) => {
-                          thumbRefs.current[index] = el;
-                        }}
-                        type="button"
-                        onClick={() => setActiveIndex(index)}
-                        style={{
-                          ...styles.thumbBtn,
-                          ...(active ? styles.thumbActive : {}),
-                        }}
-                        aria-label={`Open ${item.label}`}
-                        aria-pressed={active}
-                      >
-                        <div style={styles.thumbFrame}>
-                          {item.type === "video" ? (
-                            <div style={styles.videoThumb}>
-                              <span style={styles.videoThumbIcon}>▶</span>
-                              <span style={styles.videoThumbLabel}>{item.badge}</span>
-                            </div>
-                          ) : (
-                            <Image
-                              src={item.thumbUrl || item.url}
-                              alt={item.label}
-                              fill
-                              loading="lazy"
-                              sizes="120px"
-                              style={styles.thumbImage}
-                            />
-                          )}
-                        </div>
-
-                        <div style={styles.thumbTextWrap}>
-                          <span style={styles.thumbCaption}>{item.label}</span>
-                          <span style={styles.thumbSubcaption}>{item.badge}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </aside>
+          <div style={styles.dotsWrap}>
+            {items.map((item, index) => {
+              const active = index === activeIndex;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  style={{
+                    ...styles.dot,
+                    ...(active ? styles.dotActive : {}),
+                  }}
+                  aria-label={`Go to ${item.label}`}
+                  aria-pressed={active}
+                />
+              );
+            })}
           </div>
         </section>
       </div>
@@ -485,7 +446,7 @@ const styles = {
     minHeight: "100vh",
     background:
       "radial-gradient(circle at top, rgba(255,225,236,0.48) 0%, rgba(255,255,255,0) 28%), linear-gradient(180deg, #fff9fb 0%, #f7f5ff 42%, #f4f7fb 100%)",
-    padding: "14px 12px 28px",
+    padding: "12px 10px 20px",
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     overflow: "hidden",
@@ -514,12 +475,12 @@ const styles = {
   wrapper: {
     position: "relative",
     width: "100%",
-    maxWidth: 1120,
+    maxWidth: 640,
     margin: "0 auto",
     zIndex: 1,
   },
   header: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   brandWrap: {
     display: "flex",
@@ -530,16 +491,16 @@ const styles = {
   },
   logo: {
     width: "100%",
-    maxWidth: 152,
+    maxWidth: 148,
     height: "auto",
     objectFit: "contain",
-    filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.08))",
+    filter: "drop-shadow(0 10px 22px rgba(0,0,0,0.08))",
   },
   brandTextWrap: {
     display: "flex",
     flexDirection: "column",
     gap: 4,
-    maxWidth: 560,
+    maxWidth: 420,
   },
   brandEyebrow: {
     margin: 0,
@@ -551,40 +512,31 @@ const styles = {
   },
   brandTitle: {
     margin: 0,
-    fontSize: "clamp(26px, 4vw, 40px)",
+    fontSize: "clamp(26px, 8vw, 38px)",
     lineHeight: 1,
-    letterSpacing: "-0.045em",
+    letterSpacing: "-0.05em",
     color: "#231a2c",
   },
   brandSubtext: {
     margin: 0,
     fontSize: 13,
-    lineHeight: 1.6,
+    lineHeight: 1.55,
     color: "#7a7f8a",
   },
   heroCard: {
-    background: "rgba(255,255,255,0.74)",
+    background: "rgba(255,255,255,0.62)",
     backdropFilter: "blur(16px)",
     WebkitBackdropFilter: "blur(16px)",
     borderRadius: 26,
-    padding: 14,
+    padding: 10,
     border: "1px solid rgba(35,26,44,0.06)",
-    boxShadow: "0 16px 44px rgba(31, 41, 55, 0.08)",
-  },
-  heroMetaRow: {
-    display: "none",
-  },
-  heroPill: {
-    display: "none",
-  },
-  heroPillWarning: {
-    display: "none",
+    boxShadow: "0 14px 40px rgba(31, 41, 55, 0.08)",
   },
   topBar: {
     display: "flex",
     flexDirection: "column",
-    gap: 12,
-    marginBottom: 14,
+    gap: 10,
+    marginBottom: 10,
   },
   topBarLeft: {
     display: "flex",
@@ -620,7 +572,7 @@ const styles = {
   },
   title: {
     margin: 0,
-    fontSize: "clamp(22px, 3vw, 30px)",
+    fontSize: "clamp(20px, 6vw, 28px)",
     lineHeight: 1.02,
     color: "#111827",
     letterSpacing: "-0.045em",
@@ -650,14 +602,21 @@ const styles = {
     fontSize: 14,
     boxShadow: "0 12px 24px rgba(17, 24, 39, 0.14)",
   },
-  viewerGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: 12,
-  },
-  mediaStage: {
+  carouselShell: {
     position: "relative",
-    minWidth: 0,
+    width: "100%",
+  },
+  carouselViewport: {
+    position: "relative",
+    width: "100%",
+    minHeight: "68vh",
+    height: "68vh",
+    maxHeight: 820,
+    borderRadius: 22,
+    overflow: "hidden",
+    background: "rgba(255,255,255,0.78)",
+    border: "1px solid rgba(17,24,39,0.05)",
+    boxShadow: "0 16px 36px rgba(17, 24, 39, 0.08)",
   },
   arrowBtn: {
     position: "absolute",
@@ -676,65 +635,67 @@ const styles = {
     zIndex: 3,
   },
   arrowLeft: {
-    left: 8,
+    left: 10,
   },
   arrowRight: {
-    right: 8,
+    right: 10,
   },
   mediaButton: {
     display: "block",
+    position: "relative",
     width: "100%",
+    height: "100%",
     padding: 0,
     border: "none",
     background: "transparent",
     cursor: "pointer",
   },
-  mediaFrameOuter: {
-    padding: 8,
-    borderRadius: 24,
-    background: "rgba(255,255,255,0.84)",
-    border: "1px solid rgba(17,24,39,0.05)",
-    boxShadow: "0 16px 36px rgba(17, 24, 39, 0.08)",
-  },
-  mediaFrameInner: {
-    position: "relative",
-    width: "100%",
-    minHeight: 320,
-    aspectRatio: "4 / 5",
-    borderRadius: 18,
-    overflow: "hidden",
-    background: "linear-gradient(180deg, #fbfbfd 0%, #f3f4f6 100%)",
-  },
   mediaSkeleton: {
     position: "absolute",
-    inset: 8,
-    borderRadius: 18,
+    inset: 0,
+    borderRadius: 22,
     background:
       "linear-gradient(90deg, rgba(243,244,246,1) 25%, rgba(229,231,235,1) 37%, rgba(243,244,246,1) 63%)",
     backgroundSize: "400% 100%",
     animation: "shimmer 1.4s ease infinite",
     zIndex: 1,
   },
-  media: {
+  carouselMedia: {
     width: "100%",
     height: "100%",
     objectFit: "contain",
     display: "block",
-    background: "#f9fafb",
+    background: "linear-gradient(180deg, #fbfbfd 0%, #f3f4f6 100%)",
   },
-  mediaImage: {
+  carouselImage: {
     objectFit: "contain",
   },
+  dotsWrap: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingTop: 12,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    border: "none",
+    background: "rgba(17,24,39,0.18)",
+    padding: 0,
+    cursor: "pointer",
+  },
+  dotActive: {
+    width: 24,
+    background: "#111827",
+  },
   sidePanel: {
-    display: "grid",
-    gap: 10,
+    display: "none",
   },
   sideCard: {
-    background: "rgba(255,255,255,0.72)",
-    border: "1px solid rgba(17,24,39,0.05)",
-    borderRadius: 20,
-    padding: 12,
-    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.05)",
+    display: "none",
   },
   sideCardLabel: {
     display: "none",
@@ -752,88 +713,46 @@ const styles = {
     display: "none",
   },
   thumbHeader: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 2,
-    marginBottom: 10,
+    display: "none",
   },
   thumbHeaderTitle: {
-    fontSize: 13,
-    fontWeight: 800,
-    color: "#111827",
+    display: "none",
   },
   thumbHeaderSubtext: {
-    fontSize: 11,
-    color: "#8a8f98",
+    display: "none",
   },
   thumbnailGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 8,
+    display: "none",
   },
   thumbBtn: {
-    border: "1px solid rgba(17,24,39,0.05)",
-    background: "#fff",
-    borderRadius: 16,
-    padding: 6,
-    cursor: "pointer",
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-    textAlign: "left",
-    boxShadow: "0 8px 18px rgba(17, 24, 39, 0.04)",
+    display: "none",
   },
   thumbActive: {
-    border: "1px solid rgba(17,24,39,0.14)",
-    transform: "translateY(-1px)",
-    boxShadow: "0 12px 24px rgba(17, 24, 39, 0.08)",
+    display: "none",
   },
   thumbFrame: {
-    position: "relative",
-    width: "100%",
-    aspectRatio: "1 / 1",
-    borderRadius: 12,
-    overflow: "hidden",
-    background: "#f3f4f6",
+    display: "none",
   },
   thumbImage: {
     objectFit: "cover",
   },
   thumbTextWrap: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 1,
+    display: "none",
   },
   thumbCaption: {
-    fontSize: 11,
-    lineHeight: 1.25,
-    fontWeight: 700,
-    color: "#111827",
+    display: "none",
   },
   thumbSubcaption: {
-    fontSize: 10,
-    color: "#8a8f98",
+    display: "none",
   },
   videoThumb: {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(180deg, #1f2937 0%, #111827 100%)",
-    color: "#fff",
-    gap: 5,
+    display: "none",
   },
   videoThumbIcon: {
-    fontSize: 16,
-    lineHeight: 1,
+    display: "none",
   },
   videoThumbLabel: {
-    fontSize: 9,
-    fontWeight: 800,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    display: "none",
   },
   stateCard: {
     maxWidth: 560,
