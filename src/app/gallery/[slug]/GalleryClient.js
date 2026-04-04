@@ -465,7 +465,7 @@ function getFileExtension(url = "", fallback = "png") {
 const styles = {
   page: {
     position: "relative",
-    minHeight: "100vh",
+    minHeight: "100%",
     background: "linear-gradient(180deg, #f8f9fb 0%, #f3f4f6 42%, #eef1f4 100%)",
     padding: "12px 10px 28px",
     fontFamily:
