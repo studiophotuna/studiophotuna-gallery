@@ -150,12 +150,15 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     const item = items[activeIndex];
     if (!item?.url || sharing) return;
 
+    const shareText =
+      "Studio Photuna photo booth gallery. #studiophotuna #aheadofthemoment";
+
     setSharing(true);
     try {
       const file = await getActiveFile();
       const shareData = {
         title: "Studio Photuna",
-        text: "Studio Photuna photo booth gallery.",
+        text: shareText,
         files: file ? [file] : [],
       };
 
@@ -167,7 +170,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       if (navigator.share) {
         await navigator.share({
           title: "Studio Photuna",
-          text: "View my Studio Photuna photo booth gallery.",
+          text: shareText,
           url: item.url,
         });
         return;
