@@ -6,6 +6,8 @@ export default function GalleryClient({ gallery, initialError = "" }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [gridOpen, setGridOpen] = useState(false);
   const [mediaVisible, setMediaVisible] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -106,21 +108,74 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     touchStartY.current = null;
   }
 
+  async function getActiveFile() {
+    const item = items[activeIndex];
+    if (!item?.url) return null;
+
+    const response = await fetch(item.url, { mode: "cors" });
+    if (!response.ok) {
+      throw new Error("Unable to fetch media file.");
+    }
+
+    const blob = await response.blob();
+    const type = blob.type || (item.type === "video" ? "video/webm" : "image/png");
+    return new File([blob], item.downloadName, { type });
+  }
+
+  async function downloadActiveItem() {
+    const item = items[activeIndex];
+    if (!item?.url || downloading) return;
+
+    setDownloading(true);
+    try {
+      const file = await getActiveFile();
+      if (!file) return;
+
+      const objectUrl = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(item.url, "_blank", "noopener,noreferrer");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   async function shareActiveItem() {
     const item = items[activeIndex];
-    if (!item?.url) return;
+    if (!item?.url || sharing) return;
 
-    if (navigator.share) {
-      try {
+    setSharing(true);
+    try {
+      const file = await getActiveFile();
+      const shareData = {
+        title: "Studio Photuna",
+        text: "Studio Photuna photo booth gallery.",
+        files: file ? [file] : [],
+      };
+
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      if (navigator.share) {
         await navigator.share({
           title: "Studio Photuna",
           text: "View my Studio Photuna photo booth gallery.",
           url: item.url,
         });
-      } catch {
-        // Share sheet was cancelled.
+        return;
       }
-      return;
+    } catch {
+      // Share sheet was cancelled or file sharing is unavailable.
+    } finally {
+      setSharing(false);
     }
 
     try {
@@ -210,11 +265,21 @@ export default function GalleryClient({ gallery, initialError = "" }) {
         <button type="button" onClick={goPrev} style={styles.iconButton} aria-label="Previous">
           &lsaquo;
         </button>
-        <a href={activeItem.url} download={activeItem.downloadName} style={styles.downloadBtn}>
-          Download
-        </a>
-        <button type="button" onClick={shareActiveItem} style={styles.shareBtn}>
-          Share
+        <button
+          type="button"
+          onClick={downloadActiveItem}
+          disabled={downloading}
+          style={styles.downloadBtn}
+        >
+          {downloading ? "Saving..." : "Download"}
+        </button>
+        <button
+          type="button"
+          onClick={shareActiveItem}
+          disabled={sharing}
+          style={styles.shareBtn}
+        >
+          {sharing ? "Sharing..." : "Share"}
         </button>
         <button type="button" onClick={goNext} style={styles.iconButton} aria-label="Next">
           &rsaquo;
