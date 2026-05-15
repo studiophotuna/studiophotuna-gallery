@@ -150,8 +150,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     const item = items[activeIndex];
     if (!item?.url || sharing) return;
 
-    const shareText =
-      "Studio Photuna photo booth gallery. #studiophotuna #aheadofthemoment";
+    const shareText = "#studiophotuna #aheadofthemoment";
 
     setSharing(true);
     try {
