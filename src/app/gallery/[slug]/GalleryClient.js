@@ -171,9 +171,12 @@ export default function GalleryClient({ gallery, initialError = "" }) {
         {activeItem.type === "video" ? (
           <video
             src={activeItem.url}
+            autoPlay
             controls
+            muted
             playsInline
             loop
+            preload="metadata"
             style={{
               ...styles.media,
               opacity: mediaVisible ? 1 : 0.5,
