@@ -14,11 +14,12 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Studio Photuna Gallery",
   description: "Mobile photo booth gallery by Studio Photuna.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }) {
