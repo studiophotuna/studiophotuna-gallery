@@ -20,9 +20,7 @@ export default async function GalleryPage({ params }) {
 
   const { data, error } = await supabase
     .from("galleries")
-    .select(
-      "slug, final_url, final_video_url, final_burst_url, burst_video_urls, burst_urls, photo_urls, expires_at"
-    )
+    .select("slug, final_url, final_video_url, photo_urls, expires_at")
     .eq("slug", slug)
     .maybeSingle();
 

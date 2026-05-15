@@ -15,11 +15,6 @@ export default function GalleryClient({ gallery, initialError = "" }) {
 
     const slides = [];
     const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
-    const burstUrls = Array.isArray(gallery.burst_video_urls)
-      ? gallery.burst_video_urls
-      : Array.isArray(gallery.burst_urls)
-        ? gallery.burst_urls
-        : [];
 
     if (gallery.final_url) {
       slides.push({
@@ -31,11 +26,10 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       });
     }
 
-    const finalVideoUrl = gallery.final_video_url || gallery.final_burst_url;
-    if (finalVideoUrl) {
+    if (gallery.final_video_url) {
       slides.push({
         key: "final-video",
-        url: finalVideoUrl,
+        url: gallery.final_video_url,
         downloadName: "final-motion.webm",
         type: "video",
         label: "Motion",
@@ -50,17 +44,6 @@ export default function GalleryClient({ gallery, initialError = "" }) {
         downloadName: `photo-${index + 1}.png`,
         type: "image",
         label: `Photo ${index + 1}`,
-      });
-    });
-
-    burstUrls.forEach((url, index) => {
-      if (!url) return;
-      slides.push({
-        key: `clip-${index}`,
-        url,
-        downloadName: `clip-${index + 1}.webm`,
-        type: "video",
-        label: `Clip ${index + 1}`,
       });
     });
 
