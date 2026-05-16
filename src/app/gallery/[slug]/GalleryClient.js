@@ -29,10 +29,11 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     }
 
     if (gallery.final_video_url) {
+      const isMp4 = /\.mp4($|\?)/i.test(gallery.final_video_url);
       slides.push({
         key: "final-video",
         url: gallery.final_video_url,
-        downloadName: "final-motion.webm",
+        downloadName: isMp4 ? "final-motion-1.mp4" : "final-motion.webm",
         type: "video",
         label: "Motion",
       });
@@ -118,7 +119,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     }
 
     const blob = await response.blob();
-    const type = blob.type || (item.type === "video" ? "video/webm" : "image/png");
+    const type = blob.type || (item.type === "video" ? "video/mp4" : "image/png");
     return new File([blob], item.downloadName, { type });
   }
 
