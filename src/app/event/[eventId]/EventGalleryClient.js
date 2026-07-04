@@ -95,42 +95,37 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <div style={styles.headerText}>
-          <h1 style={styles.title}>{displayTitle}</h1>
-          <div style={styles.subtitle}>{subtitle}</div>
-        </div>
-        <div style={styles.headerActions}>
-          <button
-            type="button"
-            onClick={() => sharePage(displayTitle)}
-            disabled={sharing}
-            style={styles.iconCircleBtn}
-            aria-label="Share event gallery"
-          >
-            <ShareIcon />
-          </button>
-          <button
-            type="button"
-            onClick={() => setQrOpen(true)}
-            style={styles.iconCircleBtn}
-            aria-label="Show QR code"
-          >
-            <QrIcon />
-          </button>
+        <div style={styles.headerInner}>
+          <div style={styles.headerText}>
+            <h1 style={styles.title}>{displayTitle}</h1>
+            <div style={styles.subtitle}>{subtitle}</div>
+          </div>
+          <div style={styles.headerActions}>
+            <button
+              type="button"
+              onClick={() => sharePage(displayTitle)}
+              disabled={sharing}
+              style={styles.iconCircleBtn}
+              aria-label="Share event gallery"
+            >
+              <ShareIcon />
+            </button>
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              style={styles.iconCircleBtn}
+              aria-label="Show QR code"
+            >
+              <QrIcon />
+            </button>
+          </div>
         </div>
       </header>
 
-      <section style={styles.gridScroll}>
+      <section style={styles.gridWrap}>
         <div style={styles.grid}>
-          {tiles.map((tile, index) => (
-            <Link
-              key={tile.slug}
-              href={`/gallery/${tile.slug}`}
-              style={{
-                ...styles.tile,
-                ...(index === 0 ? styles.heroTile : styles.normalTile),
-              }}
-            >
+          {tiles.map((tile) => (
+            <Link key={tile.slug} href={`/gallery/${tile.slug}`} style={styles.tile}>
               {tile.thumbnail.type === "video" ? (
                 <video
                   src={tile.thumbnail.url}
@@ -165,50 +160,52 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
 
 const styles = {
   page: {
-    minHeight: "100dvh",
-    height: "100dvh",
-    overflow: "hidden",
+    minHeight: "100vh",
     background: "#ffffff",
     color: "#111111",
-    display: "flex",
-    flexDirection: "column",
     fontFamily: "Arial, Helvetica, sans-serif",
   },
   header: {
+    position: "sticky",
+    top: 0,
+    zIndex: 10,
+    background: "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(8px)",
+    borderBottom: "1px solid #efefef",
+  },
+  headerInner: {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 12,
-    padding:
-      "max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left))",
+    gap: 16,
+    maxWidth: 1400,
+    margin: "0 auto",
+    padding: "22px 32px",
   },
   headerText: {
     minWidth: 0,
   },
   title: {
     margin: 0,
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 800,
     lineHeight: 1.2,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
   },
   subtitle: {
-    marginTop: 5,
-    fontSize: 13,
+    marginTop: 6,
+    fontSize: 14,
     color: "#71717a",
   },
   headerActions: {
     flexShrink: 0,
     display: "flex",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   iconCircleBtn: {
     flexShrink: 0,
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: 999,
     border: "1px solid #e5e7eb",
     background: "#ffffff",
@@ -216,37 +213,30 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    cursor: "pointer",
   },
-  gridScroll: {
-    flex: 1,
-    minHeight: 0,
-    overflowY: "auto",
+  gridWrap: {
+    maxWidth: 1400,
+    margin: "0 auto",
+    padding: "28px 32px 56px",
   },
   grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 3,
-    padding: 3,
+    columnWidth: "260px",
+    columnCount: 5,
+    columnGap: 16,
   },
   tile: {
     position: "relative",
+    display: "block",
+    breakInside: "avoid",
+    marginBottom: 16,
+    borderRadius: 10,
     overflow: "hidden",
     background: "#f4f4f5",
-    border: "none",
-    padding: 0,
-    display: "block",
-  },
-  heroTile: {
-    gridColumn: "1 / -1",
-    aspectRatio: "4 / 3",
-  },
-  normalTile: {
-    aspectRatio: "1 / 1",
   },
   tileMedia: {
     width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    height: "auto",
     display: "block",
   },
   playBadge: {
@@ -254,8 +244,8 @@ const styles = {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: 38,
-    height: 38,
+    width: 42,
+    height: 42,
     borderRadius: 999,
     background: "rgba(0,0,0,0.55)",
     color: "#ffffff",
