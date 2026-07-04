@@ -2,11 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export default function GalleryClient({ gallery, initialError = "" }) {
+const FILTERS = [
+  { key: "all", label: "All Photos" },
+  { key: "photo", label: "Photos" },
+  { key: "video", label: "Videos" },
+];
+
+export default function GalleryClient({ gallery, eventName = "", initialError = "" }) {
+  const [filter, setFilter] = useState("all");
+  const [detailOpen, setDetailOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [gridOpen, setGridOpen] = useState(false);
   const [mediaVisible, setMediaVisible] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [sharing, setSharing] = useState(false);
 
   const touchStartX = useRef(null);
@@ -17,6 +25,9 @@ export default function GalleryClient({ gallery, initialError = "" }) {
 
     const slides = [];
     const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
+    const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
+      ? gallery.burst_video_urls
+      : [];
 
     if (gallery.final_url) {
       slides.push({
@@ -33,7 +44,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       slides.push({
         key: "final-video",
         url: gallery.final_video_url,
-        downloadName: isMp4 ? "final-motion-1.mp4" : "final-motion.webm",
+        downloadName: isMp4 ? "final-motion.mp4" : "final-motion.webm",
         type: "video",
         label: "Motion",
       });
@@ -50,14 +61,32 @@ export default function GalleryClient({ gallery, initialError = "" }) {
       });
     });
 
+    burstVideoUrls.forEach((url, index) => {
+      if (!url) return;
+      const isMp4 = /\.mp4($|\?)/i.test(url);
+      slides.push({
+        key: `burst-video-${index}`,
+        url,
+        downloadName: isMp4 ? `burst-video-${index + 1}.mp4` : `burst-video-${index + 1}.webm`,
+        type: "video",
+        label: `Video ${index + 1}`,
+      });
+    });
+
     return slides;
   }, [gallery]);
 
+  const filteredItems = useMemo(() => {
+    if (filter === "photo") return items.filter((item) => item.type === "image");
+    if (filter === "video") return items.filter((item) => item.type === "video");
+    return items;
+  }, [items, filter]);
+
   useEffect(() => {
-    if (activeIndex > Math.max(items.length - 1, 0)) {
+    if (activeIndex > Math.max(filteredItems.length - 1, 0)) {
       setActiveIndex(0);
     }
-  }, [activeIndex, items.length]);
+  }, [activeIndex, filteredItems.length]);
 
   useEffect(() => {
     setMediaVisible(false);
@@ -67,24 +96,29 @@ export default function GalleryClient({ gallery, initialError = "" }) {
 
   useEffect(() => {
     function handleKeyDown(event) {
-      if (!items.length) return;
+      if (!detailOpen || !filteredItems.length) return;
       if (event.key === "ArrowLeft") goPrev();
       if (event.key === "ArrowRight") goNext();
-      if (event.key === "Escape") setGridOpen(false);
+      if (event.key === "Escape") setDetailOpen(false);
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
 
+  function openDetail(index) {
+    setActiveIndex(index);
+    setDetailOpen(true);
+  }
+
   function goPrev() {
-    if (!items.length) return;
-    setActiveIndex((current) => (current === 0 ? items.length - 1 : current - 1));
+    if (!filteredItems.length) return;
+    setActiveIndex((current) => (current === 0 ? filteredItems.length - 1 : current - 1));
   }
 
   function goNext() {
-    if (!items.length) return;
-    setActiveIndex((current) => (current === items.length - 1 ? 0 : current + 1));
+    if (!filteredItems.length) return;
+    setActiveIndex((current) => (current === filteredItems.length - 1 ? 0 : current + 1));
   }
 
   function handleTouchStart(event) {
@@ -109,8 +143,7 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     touchStartY.current = null;
   }
 
-  async function getActiveFile() {
-    const item = items[activeIndex];
+  async function getFileForItem(item) {
     if (!item?.url) return null;
 
     const response = await fetch(item.url, { mode: "cors" });
@@ -123,23 +156,27 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     return new File([blob], item.downloadName, { type });
   }
 
+  async function triggerFileDownload(item) {
+    const file = await getFileForItem(item);
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
+
   async function downloadActiveItem() {
-    const item = items[activeIndex];
+    const item = filteredItems[activeIndex];
     if (!item?.url || downloading) return;
 
     setDownloading(true);
     try {
-      const file = await getActiveFile();
-      if (!file) return;
-
-      const objectUrl = URL.createObjectURL(file);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
+      await triggerFileDownload(item);
     } catch {
       window.open(item.url, "_blank", "noopener,noreferrer");
     } finally {
@@ -147,15 +184,36 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     }
   }
 
+  async function downloadAllItems() {
+    if (!filteredItems.length || downloadingAll) return;
+
+    setDownloadingAll(true);
+    try {
+      for (let index = 0; index < filteredItems.length; index += 1) {
+        const item = filteredItems[index];
+        try {
+          await triggerFileDownload(item);
+        } catch {
+          window.open(item.url, "_blank", "noopener,noreferrer");
+        }
+        if (index < filteredItems.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 350));
+        }
+      }
+    } finally {
+      setDownloadingAll(false);
+    }
+  }
+
   async function shareActiveItem() {
-    const item = items[activeIndex];
+    const item = filteredItems[activeIndex];
     if (!item?.url || sharing) return;
 
     const shareText = "#studiophotuna #aheadofthemoment";
 
     setSharing(true);
     try {
-      const file = await getActiveFile();
+      const file = await getFileForItem(item);
       const shareData = {
         title: "Studio Photuna",
         text: shareText,
@@ -188,6 +246,31 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     }
   }
 
+  async function shareGallery(title) {
+    if (sharing) return;
+
+    const shareText = "#studiophotuna #aheadofthemoment";
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+    setSharing(true);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: shareText, url: shareUrl });
+        return;
+      }
+    } catch {
+      // Share sheet was cancelled.
+    } finally {
+      setSharing(false);
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      window.prompt("Copy this link", shareUrl);
+    }
+  }
+
   if (initialError) {
     return <StatusView title="Unable to load gallery." detail={initialError} />;
   }
@@ -210,25 +293,182 @@ export default function GalleryClient({ gallery, initialError = "" }) {
     );
   }
 
-  const activeItem = items[activeIndex];
+  const displayTitle = eventName || "Studio Photuna Gallery";
+  const displayDate = gallery.created_at
+    ? new Date(gallery.created_at).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
+  const countLabel =
+    filter === "photo"
+      ? filteredItems.length === 1
+        ? "Photo"
+        : "Photos"
+      : filter === "video"
+      ? filteredItems.length === 1
+        ? "Video"
+        : "Videos"
+      : filteredItems.length === 1
+      ? "Item"
+      : "Items";
+  const subtitle = [displayDate, `${filteredItems.length} ${countLabel}`]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <img src="/logo.png" alt="Studio Photuna" style={styles.logo} />
-        <div style={styles.counter}>
-          {activeIndex + 1} / {items.length}
+        <div style={styles.headerText}>
+          <h1 style={styles.title}>{displayTitle}</h1>
+          <div style={styles.subtitle}>{subtitle}</div>
         </div>
+        <button
+          type="button"
+          onClick={() => shareGallery(displayTitle)}
+          disabled={sharing}
+          style={styles.iconCircleBtn}
+          aria-label="Share gallery"
+        >
+          <ShareIcon />
+        </button>
       </header>
 
-      <section
-        style={styles.viewer}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
-        {activeItem.type === "video" ? (
+      <nav style={styles.tabBar} aria-label="Media filter">
+        {FILTERS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setFilter(item.key)}
+            style={{
+              ...styles.tabBtn,
+              ...(filter === item.key ? styles.tabBtnActive : {}),
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      <section style={styles.gridScroll}>
+        {filteredItems.length === 0 ? (
+          <div style={styles.emptyFilter}>
+            No {filter === "video" ? "videos" : "photos"} yet.
+          </div>
+        ) : (
+          <div style={styles.grid}>
+            {filteredItems.map((item, index) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => openDetail(index)}
+                style={{
+                  ...styles.tile,
+                  ...(index === 0 ? styles.heroTile : styles.normalTile),
+                }}
+              >
+                {item.type === "video" ? (
+                  <video
+                    src={item.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    style={styles.tileMedia}
+                  />
+                ) : (
+                  <img src={item.url} alt="" style={styles.tileMedia} />
+                )}
+                {item.type === "video" && (
+                  <span style={styles.playBadge}>
+                    <PlayIcon />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div style={styles.bottomBar}>
+        <button
+          type="button"
+          onClick={downloadAllItems}
+          disabled={downloadingAll || !filteredItems.length}
+          style={styles.downloadAllBtn}
+        >
+          <DownloadIcon />
+          <span>{downloadingAll ? "Downloading..." : "Download All"}</span>
+        </button>
+      </div>
+
+      {detailOpen && (
+        <DetailView
+          items={filteredItems}
+          activeIndex={activeIndex}
+          mediaVisible={mediaVisible}
+          downloading={downloading}
+          sharing={sharing}
+          onClose={() => setDetailOpen(false)}
+          onPrev={goPrev}
+          onNext={goNext}
+          onDownload={downloadActiveItem}
+          onShare={shareActiveItem}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        />
+      )}
+    </main>
+  );
+}
+
+function DetailView({
+  items,
+  activeIndex,
+  mediaVisible,
+  downloading,
+  sharing,
+  onClose,
+  onPrev,
+  onNext,
+  onDownload,
+  onShare,
+  onTouchStart,
+  onTouchEnd,
+}) {
+  const item = items[activeIndex];
+  if (!item) return null;
+
+  return (
+    <div style={styles.detailOverlay}>
+      <header style={styles.detailHeader}>
+        <button
+          type="button"
+          onClick={onClose}
+          style={styles.iconCircleBtnLight}
+          aria-label="Back to gallery"
+        >
+          <BackIcon />
+        </button>
+        <div style={styles.detailCounter}>
+          {activeIndex + 1} / {items.length}
+        </div>
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={sharing}
+          style={styles.iconCircleBtnLight}
+          aria-label="Share"
+        >
+          <ShareIcon />
+        </button>
+      </header>
+
+      <section style={styles.viewer} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        {item.type === "video" ? (
           <video
-            src={activeItem.url}
+            key={item.key}
+            src={item.url}
             autoPlay
             controls
             muted
@@ -243,7 +483,8 @@ export default function GalleryClient({ gallery, initialError = "" }) {
           />
         ) : (
           <img
-            src={activeItem.url}
+            key={item.key}
+            src={item.url}
             alt="Gallery item"
             style={{
               ...styles.media,
@@ -254,88 +495,24 @@ export default function GalleryClient({ gallery, initialError = "" }) {
         )}
       </section>
 
-      <section style={styles.infoBar}>
-        <div>
-          <div style={styles.itemLabel}>{activeItem.label}</div>
-          <div style={styles.itemMeta}>Swipe to browse</div>
-        </div>
-        <button type="button" onClick={() => setGridOpen(true)} style={styles.allButton}>
-          All
-        </button>
-      </section>
-
-      <nav style={styles.actionBar} aria-label="Gallery actions">
-        <button type="button" onClick={goPrev} style={styles.iconButton} aria-label="Previous">
+      <nav style={styles.detailActionBar} aria-label="Item actions">
+        <button type="button" onClick={onPrev} style={styles.iconButton} aria-label="Previous">
           &lsaquo;
         </button>
         <button
           type="button"
-          onClick={downloadActiveItem}
+          onClick={onDownload}
           disabled={downloading}
           style={styles.downloadBtn}
         >
-          {downloading ? "Saving..." : "Download"}
+          <DownloadIcon />
+          <span>{downloading ? "Saving..." : "Download"}</span>
         </button>
-        <button
-          type="button"
-          onClick={shareActiveItem}
-          disabled={sharing}
-          style={styles.shareBtn}
-        >
-          {sharing ? "Sharing..." : "Share"}
-        </button>
-        <button type="button" onClick={goNext} style={styles.iconButton} aria-label="Next">
+        <button type="button" onClick={onNext} style={styles.iconButton} aria-label="Next">
           &rsaquo;
         </button>
       </nav>
-
-      {gridOpen && (
-        <div style={styles.sheetBackdrop} onClick={() => setGridOpen(false)}>
-          <div style={styles.sheet} onClick={(event) => event.stopPropagation()}>
-            <div style={styles.sheetHeader}>
-              <div>
-                <div style={styles.sheetTitle}>All media</div>
-                <div style={styles.sheetSubtitle}>
-                  {items.length} item{items.length === 1 ? "" : "s"}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setGridOpen(false)}
-                style={styles.closeSheetBtn}
-                aria-label="Close media list"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div style={styles.mediaGrid}>
-              {items.map((item, index) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    setActiveIndex(index);
-                    setGridOpen(false);
-                  }}
-                  style={{
-                    ...styles.gridItem,
-                    ...(activeIndex === index ? styles.gridItemActive : {}),
-                  }}
-                >
-                  {item.type === "video" ? (
-                    <video src={item.url} muted playsInline style={styles.gridThumb} />
-                  ) : (
-                    <img src={item.url} alt="" style={styles.gridThumb} />
-                  )}
-                  <span style={styles.gridLabel}>{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+    </div>
   );
 }
 
@@ -351,41 +528,213 @@ function StatusView({ title, detail }) {
   );
 }
 
+function ShareIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v12" />
+      <path d="M8 7l4-4 4 4" />
+      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v12" />
+      <path d="M8 11l4 4 4-4" />
+      <path d="M5 19h14" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  );
+}
+
 const styles = {
   page: {
-    minHeight: "100dvh",
     height: "100dvh",
     overflow: "hidden",
-    background: "#050505",
-    color: "#ffffff",
-    display: "grid",
-    gridTemplateRows: "64px minmax(0, 1fr) 62px 82px",
+    background: "#ffffff",
+    color: "#111111",
+    display: "flex",
+    flexDirection: "column",
     fontFamily: "Arial, Helvetica, sans-serif",
   },
   header: {
     display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: "max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left))",
+  },
+  headerText: {
+    minWidth: 0,
+  },
+  title: {
+    margin: 0,
+    fontSize: 24,
+    fontWeight: 800,
+    lineHeight: 1.2,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  subtitle: {
+    marginTop: 5,
+    fontSize: 13,
+    color: "#71717a",
+  },
+  iconCircleBtn: {
+    flexShrink: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    color: "#111111",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabBar: {
+    display: "flex",
+    gap: 8,
+    padding: "0 max(16px, env(safe-area-inset-left)) 14px",
+    overflowX: "auto",
+  },
+  tabBtn: {
+    flexShrink: 0,
+    height: 38,
+    padding: "0 16px",
+    borderRadius: 999,
+    border: "none",
+    background: "transparent",
+    color: "#6b7280",
+    fontSize: 14,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  tabBtnActive: {
+    background: "#111111",
+    color: "#ffffff",
+  },
+  gridScroll: {
+    flex: 1,
+    minHeight: 0,
+    overflowY: "auto",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: 3,
+    padding: 3,
+  },
+  emptyFilter: {
+    padding: "60px 20px",
+    textAlign: "center",
+    color: "#71717a",
+    fontSize: 14,
+  },
+  tile: {
+    position: "relative",
+    overflow: "hidden",
+    background: "#f4f4f5",
+    border: "none",
+    padding: 0,
+  },
+  heroTile: {
+    gridColumn: "1 / -1",
+    aspectRatio: "4 / 3",
+  },
+  normalTile: {
+    aspectRatio: "1 / 1",
+  },
+  tileMedia: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  playBadge: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    background: "rgba(0,0,0,0.55)",
+    color: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bottomBar: {
+    padding:
+      "12px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
+    background: "#ffffff",
+    borderTop: "1px solid #f0f0f0",
+  },
+  downloadAllBtn: {
+    width: "100%",
+    height: 52,
+    borderRadius: 999,
+    border: "none",
+    background: "#111111",
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: 800,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  detailOverlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 60,
+    background: "#050505",
+    color: "#ffffff",
+    display: "grid",
+    gridTemplateRows: "60px minmax(0, 1fr) 82px",
+  },
+  detailHeader: {
+    display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "10px max(16px, env(safe-area-inset-left)) 8px max(16px, env(safe-area-inset-left))",
+    padding: "10px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left))",
     background: "rgba(5,5,5,0.92)",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
-  logo: {
-    width: "150px",
-    maxWidth: "48vw",
-    height: "auto",
-    objectFit: "contain",
-    filter: "brightness(1.08)",
-  },
-  counter: {
-    minWidth: 54,
+  iconCircleBtnLight: {
+    width: 40,
+    height: 40,
     borderRadius: 999,
-    padding: "7px 11px",
-    background: "rgba(255,255,255,0.1)",
-    color: "rgba(255,255,255,0.86)",
+    border: "1px solid rgba(255,255,255,0.16)",
+    background: "rgba(255,255,255,0.08)",
+    color: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailCounter: {
     fontSize: 13,
     fontWeight: 700,
-    textAlign: "center",
+    color: "rgba(255,255,255,0.82)",
   },
   viewer: {
     minHeight: 0,
@@ -404,38 +753,9 @@ const styles = {
     transition: "opacity 180ms ease, transform 180ms ease",
     background: "#050505",
   },
-  infoBar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    padding: "10px 16px",
-    borderTop: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(5,5,5,0.94)",
-  },
-  itemLabel: {
-    fontSize: 16,
-    fontWeight: 800,
-    lineHeight: 1.1,
-  },
-  itemMeta: {
-    marginTop: 4,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.58)",
-  },
-  allButton: {
-    height: 40,
-    minWidth: 58,
-    border: "1px solid rgba(255,255,255,0.14)",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.08)",
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: 800,
-  },
-  actionBar: {
+  detailActionBar: {
     display: "grid",
-    gridTemplateColumns: "44px 1fr 0.72fr 44px",
+    gridTemplateColumns: "44px 1fr 44px",
     alignItems: "center",
     gap: 10,
     padding:
@@ -458,106 +778,13 @@ const styles = {
     borderRadius: 999,
     background: "#111111",
     color: "#ffffff",
-    textDecoration: "none",
+    border: "none",
     fontSize: 15,
     fontWeight: 900,
-    display: "inline-flex",
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-  },
-  shareBtn: {
-    height: 48,
-    borderRadius: 999,
-    border: "1px solid #d4d4d8",
-    background: "#ffffff",
-    color: "#111111",
-    fontSize: 15,
-    fontWeight: 900,
-  },
-  sheetBackdrop: {
-    position: "fixed",
-    inset: 0,
-    zIndex: 50,
-    display: "flex",
-    alignItems: "flex-end",
-    background: "rgba(0,0,0,0.58)",
-  },
-  sheet: {
-    width: "100%",
-    maxHeight: "76dvh",
-    overflow: "hidden",
-    borderRadius: "22px 22px 0 0",
-    background: "#ffffff",
-    color: "#111111",
-    boxShadow: "0 -16px 50px rgba(0,0,0,0.36)",
-  },
-  sheetHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-    padding: "18px 18px 12px",
-    borderBottom: "1px solid #eeeeee",
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: 900,
-  },
-  sheetSubtitle: {
-    marginTop: 3,
-    fontSize: 12,
-    color: "#71717a",
-  },
-  closeSheetBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    border: "1px solid #e5e7eb",
-    background: "#ffffff",
-    color: "#111111",
-    fontSize: 24,
-    lineHeight: 1,
-  },
-  mediaGrid: {
-    maxHeight: "calc(76dvh - 78px)",
-    overflowY: "auto",
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 10,
-    padding: "14px 14px calc(18px + env(safe-area-inset-bottom))",
-  },
-  gridItem: {
-    position: "relative",
-    aspectRatio: "1 / 1",
-    overflow: "hidden",
-    borderRadius: 14,
-    border: "2px solid transparent",
-    background: "#f4f4f5",
-    padding: 0,
-  },
-  gridItemActive: {
-    borderColor: "#111111",
-  },
-  gridThumb: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  },
-  gridLabel: {
-    position: "absolute",
-    left: 6,
-    right: 6,
-    bottom: 6,
-    borderRadius: 999,
-    padding: "4px 7px",
-    background: "rgba(0,0,0,0.62)",
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: 800,
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    gap: 8,
   },
   statusPage: {
     minHeight: "100dvh",
