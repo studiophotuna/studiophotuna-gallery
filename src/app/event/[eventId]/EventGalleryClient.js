@@ -232,6 +232,7 @@ const styles = {
     marginBottom: 16,
     borderRadius: 10,
     overflow: "hidden",
+    border: "1px solid rgba(0,0,0,0.08)",
     background: "#f4f4f5",
   },
   tileMedia: {
