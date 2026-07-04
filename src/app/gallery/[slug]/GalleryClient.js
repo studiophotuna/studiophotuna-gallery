@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BackIcon, DownloadIcon, PlayIcon, QrIcon, ShareIcon } from "../../../components/icons";
+import QRCodeModal from "../../../components/QRCodeModal";
+import StatusView from "../../../components/StatusView";
 
 const FILTERS = [
   { key: "all", label: "All Photos" },
@@ -16,6 +19,7 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
   const [downloading, setDownloading] = useState(false);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -324,15 +328,25 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
           <h1 style={styles.title}>{displayTitle}</h1>
           <div style={styles.subtitle}>{subtitle}</div>
         </div>
-        <button
-          type="button"
-          onClick={() => shareGallery(displayTitle)}
-          disabled={sharing}
-          style={styles.iconCircleBtn}
-          aria-label="Share gallery"
-        >
-          <ShareIcon />
-        </button>
+        <div style={styles.headerActions}>
+          <button
+            type="button"
+            onClick={() => shareGallery(displayTitle)}
+            disabled={sharing}
+            style={styles.iconCircleBtn}
+            aria-label="Share gallery"
+          >
+            <ShareIcon />
+          </button>
+          <button
+            type="button"
+            onClick={() => setQrOpen(true)}
+            style={styles.iconCircleBtn}
+            aria-label="Show QR code"
+          >
+            <QrIcon />
+          </button>
+        </div>
       </header>
 
       <nav style={styles.tabBar} aria-label="Media filter">
@@ -414,10 +428,19 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
           onNext={goNext}
           onDownload={downloadActiveItem}
           onShare={shareActiveItem}
+          onShowQr={() => setQrOpen(true)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         />
       )}
+
+      <QRCodeModal
+        open={qrOpen}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={displayTitle}
+        subtitle="Scan to open this gallery on your own phone."
+        onClose={() => setQrOpen(false)}
+      />
     </main>
   );
 }
@@ -433,6 +456,7 @@ function DetailView({
   onNext,
   onDownload,
   onShare,
+  onShowQr,
   onTouchStart,
   onTouchEnd,
 }) {
@@ -453,15 +477,25 @@ function DetailView({
         <div style={styles.detailCounter}>
           {activeIndex + 1} / {items.length}
         </div>
-        <button
-          type="button"
-          onClick={onShare}
-          disabled={sharing}
-          style={styles.iconCircleBtnLight}
-          aria-label="Share"
-        >
-          <ShareIcon />
-        </button>
+        <div style={styles.headerActions}>
+          <button
+            type="button"
+            onClick={onShare}
+            disabled={sharing}
+            style={styles.iconCircleBtnLight}
+            aria-label="Share"
+          >
+            <ShareIcon />
+          </button>
+          <button
+            type="button"
+            onClick={onShowQr}
+            style={styles.iconCircleBtnLight}
+            aria-label="Show QR code"
+          >
+            <QrIcon />
+          </button>
+        </div>
       </header>
 
       <section style={styles.viewer} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
@@ -516,54 +550,6 @@ function DetailView({
   );
 }
 
-function StatusView({ title, detail }) {
-  return (
-    <main style={styles.statusPage}>
-      <div style={styles.statusCard}>
-        <img src="/logo.png" alt="Studio Photuna" style={styles.statusLogo} />
-        <p style={styles.statusTitle}>{title}</p>
-        {detail && <p style={styles.statusDetail}>{detail}</p>}
-      </div>
-    </main>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v12" />
-      <path d="M8 7l4-4 4 4" />
-      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
-    </svg>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v12" />
-      <path d="M8 11l4 4 4-4" />
-      <path d="M5 19h14" />
-    </svg>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
-
-function BackIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M15 5l-7 7 7 7" />
-    </svg>
-  );
-}
-
 const styles = {
   page: {
     height: "100dvh",
@@ -583,6 +569,12 @@ const styles = {
   },
   headerText: {
     minWidth: 0,
+  },
+  headerActions: {
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
   },
   title: {
     margin: 0,
@@ -785,41 +777,5 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-  },
-  statusPage: {
-    minHeight: "100dvh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 18,
-    background: "#f4f4f5",
-    fontFamily: "Arial, Helvetica, sans-serif",
-  },
-  statusCard: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: 22,
-    background: "#ffffff",
-    padding: "28px 20px",
-    textAlign: "center",
-    boxShadow: "0 12px 32px rgba(0,0,0,0.08)",
-  },
-  statusLogo: {
-    width: 190,
-    maxWidth: "80%",
-    height: "auto",
-    marginBottom: 18,
-  },
-  statusTitle: {
-    margin: 0,
-    color: "#111111",
-    fontSize: 21,
-    fontWeight: 900,
-  },
-  statusDetail: {
-    margin: "10px 0 0",
-    color: "#666666",
-    fontSize: 14,
-    lineHeight: 1.45,
   },
 };
