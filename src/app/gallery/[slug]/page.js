@@ -20,7 +20,9 @@ export default async function GalleryPage({ params }) {
 
   const { data, error } = await supabase
     .from("galleries")
-    .select("slug, final_url, final_video_url, photo_urls, expires_at")
+    .select(
+      "slug, event_id, final_url, final_video_url, photo_urls, burst_video_urls, expires_at, created_at, user_id"
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -33,5 +35,18 @@ export default async function GalleryPage({ params }) {
     );
   }
 
-  return <GalleryClient gallery={data || null} initialError="" />;
+  let eventName = "";
+  if (data?.user_id && data?.event_id) {
+    const { data: boothSettings } = await supabase
+      .from("booth_settings")
+      .select("events")
+      .eq("user_id", data.user_id)
+      .maybeSingle();
+
+    const events = Array.isArray(boothSettings?.events) ? boothSettings.events : [];
+    const matchedEvent = events.find((event) => event?.id === data.event_id);
+    eventName = matchedEvent?.name || "";
+  }
+
+  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" />;
 }
