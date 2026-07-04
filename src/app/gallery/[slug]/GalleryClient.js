@@ -377,10 +377,7 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
                 key={item.key}
                 type="button"
                 onClick={() => openDetail(index)}
-                style={{
-                  ...styles.tile,
-                  ...(index === 0 ? styles.heroTile : styles.normalTile),
-                }}
+                style={styles.tile}
               >
                 {item.type === "video" ? (
                   <video
@@ -630,10 +627,10 @@ const styles = {
     overflowY: "auto",
   },
   grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 3,
-    padding: 3,
+    columnWidth: "160px",
+    columnCount: 2,
+    columnGap: 8,
+    padding: 8,
   },
   emptyFilter: {
     padding: "60px 20px",
@@ -643,22 +640,19 @@ const styles = {
   },
   tile: {
     position: "relative",
+    display: "block",
+    width: "100%",
+    breakInside: "avoid",
+    marginBottom: 8,
     overflow: "hidden",
+    borderRadius: 10,
+    border: "1px solid rgba(0,0,0,0.08)",
     background: "#f4f4f5",
-    border: "none",
     padding: 0,
-  },
-  heroTile: {
-    gridColumn: "1 / -1",
-    aspectRatio: "4 / 3",
-  },
-  normalTile: {
-    aspectRatio: "1 / 1",
   },
   tileMedia: {
     width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    height: "auto",
     display: "block",
   },
   playBadge: {
