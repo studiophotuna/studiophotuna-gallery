@@ -405,7 +405,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
             <p style={styles.sessionPickerHint}>Select your session to view your photos</p>
             <div style={styles.sessionGrid}>
             {sessions.map((session) => {
-              const thumbUrl = session.finalUrl || session.photoUrls[0] || null;
+              const thumbUrl = session.photoUrls[0] || session.finalUrl || null;
               const photoCount = (session.finalUrl ? 1 : 0) + session.photoUrls.length;
               const videoCount = (session.finalVideoUrl ? 1 : 0) + session.burstVideoUrls.length;
               const dateLabel = session.createdAt
