@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BackIcon, DownloadIcon, PlayIcon, QrIcon, ShareIcon } from "../../../components/icons";
 import QRCodeModal from "../../../components/QRCodeModal";
 import StatusView from "../../../components/StatusView";
+import VideoThumbnail from "../../../components/VideoThumbnail";
 
 const FILTERS = [
   { key: "all", label: "All Photos" },
@@ -380,13 +381,7 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
                 style={styles.tile}
               >
                 {item.type === "video" ? (
-                  <video
-                    src={item.url}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    style={styles.tileMedia}
-                  />
+                  <VideoThumbnail src={item.url} style={styles.tileMedia} />
                 ) : (
                   <img src={item.url} alt="" style={styles.tileMedia} />
                 )}
