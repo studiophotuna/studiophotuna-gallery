@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PlayIcon, QrIcon, ShareIcon } from "../../../components/icons";
 import QRCodeModal from "../../../components/QRCodeModal";
 import StatusView from "../../../components/StatusView";
+import VideoThumbnail from "../../../components/VideoThumbnail";
 
 function getSessionThumbnail(session) {
   if (session.final_url) {
@@ -127,13 +128,7 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
           {tiles.map((tile) => (
             <Link key={tile.slug} href={`/gallery/${tile.slug}`} style={styles.tile}>
               {tile.thumbnail.type === "video" ? (
-                <video
-                  src={tile.thumbnail.url}
-                  muted
-                  playsInline
-                  preload="metadata"
-                  style={styles.tileMedia}
-                />
+                <VideoThumbnail src={tile.thumbnail.url} style={styles.tileMedia} />
               ) : (
                 <img src={tile.thumbnail.url} alt="" style={styles.tileMedia} />
               )}
