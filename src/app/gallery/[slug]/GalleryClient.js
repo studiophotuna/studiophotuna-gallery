@@ -319,7 +319,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   if (isSessionPicker) {
     subtitle = `${sessions.length} session${sessions.length !== 1 ? "s" : ""}`;
   } else if (!isEmptyEventGallery) {
-    const sessionLabel = selectedSession ? `Session ${selectedSession.index}` : "";
+    const sessionLabel = selectedSession ? `Guest Photos ${selectedSession.index}` : "";
     const createdAt = selectedSession?.createdAt ?? gallery?.created_at;
     const displayDate = createdAt
       ? new Date(createdAt).toLocaleDateString("en-US", {
@@ -442,7 +442,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                     )}
                   </div>
                   <div style={styles.sessionCardInfo}>
-                    <div style={styles.sessionCardTitle}>Session {session.index}</div>
+                    <div style={styles.sessionCardTitle}>Guest Photos {session.index}</div>
                     {dateLabel ? <div style={styles.sessionCardMeta}>{dateLabel}</div> : null}
                     {mediaLabel ? <div style={styles.sessionCardCount}>{mediaLabel}</div> : null}
                   </div>
