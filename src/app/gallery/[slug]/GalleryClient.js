@@ -12,7 +12,8 @@ const FILTERS = [
   { key: "video", label: "Videos" },
 ];
 
-export default function GalleryClient({ gallery, eventName = "", initialError = "" }) {
+export default function GalleryClient({ gallery, sessions = null, eventName = "", initialError = "" }) {
+  const [selectedSession, setSelectedSession] = useState(null);
   const [filter, setFilter] = useState("all");
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -25,30 +26,43 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
 
+  // Reset view state when navigating between sessions
+  useEffect(() => {
+    setFilter("all");
+    setActiveIndex(0);
+    setDetailOpen(false);
+  }, [selectedSession]);
+
+  const isSessionPicker = Array.isArray(sessions) && sessions.length > 0 && !selectedSession;
+  const isEmptyEventGallery = Array.isArray(sessions) && sessions.length === 0 && !selectedSession;
+
   const items = useMemo(() => {
-    if (!gallery) return [];
+    const finalUrl = selectedSession ? selectedSession.finalUrl : gallery?.final_url;
+    const finalVideoUrl = selectedSession ? selectedSession.finalVideoUrl : gallery?.final_video_url;
+    const photoUrls = selectedSession
+      ? selectedSession.photoUrls
+      : Array.isArray(gallery?.photo_urls) ? gallery.photo_urls : [];
+    const burstVideoUrls = selectedSession
+      ? selectedSession.burstVideoUrls
+      : Array.isArray(gallery?.burst_video_urls) ? gallery.burst_video_urls : [];
 
     const slides = [];
-    const photoUrls = Array.isArray(gallery.photo_urls) ? gallery.photo_urls : [];
-    const burstVideoUrls = Array.isArray(gallery.burst_video_urls)
-      ? gallery.burst_video_urls
-      : [];
 
-    if (gallery.final_url) {
+    if (finalUrl) {
       slides.push({
         key: "final",
-        url: gallery.final_url,
+        url: finalUrl,
         downloadName: "final-output.png",
         type: "image",
         label: "Final",
       });
     }
 
-    if (gallery.final_video_url) {
-      const isMp4 = /\.mp4($|\?)/i.test(gallery.final_video_url);
+    if (finalVideoUrl) {
+      const isMp4 = /\.mp4($|\?)/i.test(finalVideoUrl);
       slides.push({
         key: "final-video",
-        url: gallery.final_video_url,
+        url: finalVideoUrl,
         downloadName: isMp4 ? "final-motion.mp4" : "final-motion.webm",
         type: "video",
         label: "Motion",
@@ -79,7 +93,7 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
     });
 
     return slides;
-  }, [gallery]);
+  }, [gallery, selectedSession]);
 
   const filteredItems = useMemo(() => {
     if (filter === "photo") return items.filter((item) => item.type === "image");
@@ -280,7 +294,7 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
     return <StatusView title="Unable to load gallery." detail={initialError} />;
   }
 
-  if (!gallery) {
+  if (!gallery && !sessions) {
     return (
       <StatusView
         title="Gallery not found"
@@ -289,7 +303,8 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
     );
   }
 
-  if (!items.length) {
+  // Single-session gallery with no photos yet
+  if (!sessions && !items.length) {
     return (
       <StatusView
         title="No photos available"
@@ -299,35 +314,49 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
   }
 
   const displayTitle = eventName || "Studio Photuna Gallery";
-  const displayDate = gallery.created_at
-    ? new Date(gallery.created_at).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "";
-  const countLabel =
-    filter === "photo"
-      ? filteredItems.length === 1
-        ? "Photo"
-        : "Photos"
-      : filter === "video"
-      ? filteredItems.length === 1
-        ? "Video"
-        : "Videos"
-      : filteredItems.length === 1
-      ? "Item"
-      : "Items";
-  const subtitle = [displayDate, `${filteredItems.length} ${countLabel}`]
-    .filter(Boolean)
-    .join(" · ");
+
+  let subtitle = "";
+  if (isSessionPicker) {
+    subtitle = `${sessions.length} session${sessions.length !== 1 ? "s" : ""}`;
+  } else if (!isEmptyEventGallery) {
+    const sessionLabel = selectedSession ? `Session ${selectedSession.index}` : "";
+    const createdAt = selectedSession?.createdAt ?? gallery?.created_at;
+    const displayDate = createdAt
+      ? new Date(createdAt).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+    const countLabel =
+      filter === "photo"
+        ? filteredItems.length === 1 ? "Photo" : "Photos"
+        : filter === "video"
+        ? filteredItems.length === 1 ? "Video" : "Videos"
+        : filteredItems.length === 1 ? "Item" : "Items";
+    subtitle = [sessionLabel, displayDate, `${filteredItems.length} ${countLabel}`]
+      .filter(Boolean)
+      .join(" · ");
+  }
 
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <div style={styles.headerText}>
-          <h1 style={styles.title}>{displayTitle}</h1>
-          <div style={styles.subtitle}>{subtitle}</div>
+        <div style={styles.headerLeft}>
+          {selectedSession && (
+            <button
+              type="button"
+              onClick={() => setSelectedSession(null)}
+              style={styles.iconCircleBtn}
+              aria-label="Back to sessions"
+            >
+              <BackIcon />
+            </button>
+          )}
+          <div style={styles.headerText}>
+            <h1 style={styles.title}>{displayTitle}</h1>
+            {subtitle ? <div style={styles.subtitle}>{subtitle}</div> : null}
+          </div>
         </div>
         <div style={styles.headerActions}>
           <button
@@ -350,24 +379,79 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
         </div>
       </header>
 
-      <nav style={styles.tabBar} aria-label="Media filter">
-        {FILTERS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => setFilter(item.key)}
-            style={{
-              ...styles.tabBtn,
-              ...(filter === item.key ? styles.tabBtnActive : {}),
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
+      {!isSessionPicker && !isEmptyEventGallery && (
+        <nav style={styles.tabBar} aria-label="Media filter">
+          {FILTERS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setFilter(item.key)}
+              style={{
+                ...styles.tabBtn,
+                ...(filter === item.key ? styles.tabBtnActive : {}),
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      )}
 
       <section style={styles.gridScroll}>
-        {filteredItems.length === 0 ? (
+        {isEmptyEventGallery ? (
+          <div style={styles.emptyFilter}>No sessions captured yet.</div>
+        ) : isSessionPicker ? (
+          <div style={styles.sessionList}>
+            <p style={styles.sessionPickerHint}>Select your session to view your photos</p>
+            {sessions.map((session) => {
+              const thumbUrl = session.finalUrl || session.photoUrls[0] || null;
+              const photoCount = (session.finalUrl ? 1 : 0) + session.photoUrls.length;
+              const videoCount = (session.finalVideoUrl ? 1 : 0) + session.burstVideoUrls.length;
+              const dateLabel = session.createdAt
+                ? new Date(session.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "";
+              const mediaLabel = [
+                photoCount ? `${photoCount} photo${photoCount !== 1 ? "s" : ""}` : "",
+                videoCount ? `${videoCount} video${videoCount !== 1 ? "s" : ""}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+              return (
+                <button
+                  key={session.index}
+                  type="button"
+                  onClick={() => setSelectedSession(session)}
+                  style={styles.sessionCard}
+                >
+                  <div style={styles.sessionThumb}>
+                    {thumbUrl ? (
+                      <img src={thumbUrl} alt="" style={styles.sessionThumbImg} />
+                    ) : (
+                      <div style={styles.sessionThumbPlaceholder}>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div style={styles.sessionCardInfo}>
+                    <div style={styles.sessionCardTitle}>Session {session.index}</div>
+                    {dateLabel ? <div style={styles.sessionCardMeta}>{dateLabel}</div> : null}
+                    {mediaLabel ? <div style={styles.sessionCardCount}>{mediaLabel}</div> : null}
+                  </div>
+                  <div style={styles.sessionCardChevron}>›</div>
+                </button>
+              );
+            })}
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div style={styles.emptyFilter}>
             No {filter === "video" ? "videos" : "photos"} yet.
           </div>
@@ -396,17 +480,19 @@ export default function GalleryClient({ gallery, eventName = "", initialError = 
         )}
       </section>
 
-      <div style={styles.bottomBar}>
-        <button
-          type="button"
-          onClick={downloadAllItems}
-          disabled={downloadingAll || !filteredItems.length}
-          style={styles.downloadAllBtn}
-        >
-          <DownloadIcon />
-          <span>{downloadingAll ? "Downloading..." : "Download All"}</span>
-        </button>
-      </div>
+      {!isSessionPicker && !isEmptyEventGallery && (
+        <div style={styles.bottomBar}>
+          <button
+            type="button"
+            onClick={downloadAllItems}
+            disabled={downloadingAll || !filteredItems.length}
+            style={styles.downloadAllBtn}
+          >
+            <DownloadIcon />
+            <span>{downloadingAll ? "Downloading..." : "Download All"}</span>
+          </button>
+        </div>
+      )}
 
       {detailOpen && (
         <DetailView
@@ -559,6 +645,13 @@ const styles = {
     gap: 12,
     padding: "max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 12px max(20px, env(safe-area-inset-left))",
   },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    minWidth: 0,
+    flex: 1,
+  },
   headerText: {
     minWidth: 0,
   },
@@ -664,6 +757,79 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
+  // Session picker
+  sessionList: {
+    padding: "4px 16px 24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+  },
+  sessionPickerHint: {
+    margin: "8px 0 4px",
+    fontSize: 13,
+    color: "#9ca3af",
+    textAlign: "center",
+  },
+  sessionCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    padding: "12px 14px",
+    borderRadius: 16,
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    textAlign: "left",
+    width: "100%",
+    cursor: "pointer",
+  },
+  sessionThumb: {
+    flexShrink: 0,
+    width: 66,
+    height: 66,
+    borderRadius: 10,
+    overflow: "hidden",
+    background: "#f4f4f5",
+  },
+  sessionThumbImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  sessionThumbPlaceholder: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#d4d4d8",
+  },
+  sessionCardInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sessionCardTitle: {
+    fontSize: 15,
+    fontWeight: 700,
+    color: "#111111",
+  },
+  sessionCardMeta: {
+    fontSize: 12,
+    color: "#71717a",
+    marginTop: 3,
+  },
+  sessionCardCount: {
+    fontSize: 12,
+    color: "#a1a1aa",
+    marginTop: 2,
+  },
+  sessionCardChevron: {
+    fontSize: 24,
+    color: "#d4d4d8",
+    flexShrink: 0,
+    lineHeight: 1,
+  },
+  // Bottom bar
   bottomBar: {
     padding:
       "12px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
@@ -684,6 +850,7 @@ const styles = {
     justifyContent: "center",
     gap: 8,
   },
+  // Detail overlay
   detailOverlay: {
     position: "fixed",
     inset: 0,

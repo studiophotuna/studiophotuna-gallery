@@ -36,37 +36,31 @@ export default async function GalleryPage({ params }) {
     );
   }
 
-  // Event-level gallery (session_id is null): aggregate all session galleries under this event
-  let gallery = data || null;
+  const eventName = data?.event_id ? await getPublicEventName(supabase, data.event_id) : "";
+
+  // Event-level gallery (session_id is null): show a per-session picker
   if (data && data.session_id === null && data.event_id) {
-    const { data: sessions } = await supabase
+    const { data: sessionRows } = await supabase
       .from("galleries")
-      .select("final_url, final_video_url, photo_urls, burst_video_urls, created_at")
+      .select("slug, final_url, final_video_url, photo_urls, burst_video_urls, created_at")
       .eq("event_id", data.event_id)
       .not("session_id", "is", null)
       .order("created_at", { ascending: true });
 
-    if (sessions && sessions.length > 0) {
-      // Combine each session's content in order: final image, photos, final video, burst videos
-      const allPhotoUrls = sessions.flatMap((s) => [
-        ...(s.final_url ? [s.final_url] : []),
-        ...(Array.isArray(s.photo_urls) ? s.photo_urls : []),
-      ]);
-      const allBurstVideoUrls = sessions.flatMap((s) => [
-        ...(s.final_video_url ? [s.final_video_url] : []),
-        ...(Array.isArray(s.burst_video_urls) ? s.burst_video_urls : []),
-      ]);
-      gallery = {
-        ...data,
-        photo_urls: allPhotoUrls,
-        burst_video_urls: allBurstVideoUrls,
-        final_url: null,
-        final_video_url: null,
-      };
-    }
+    const sessions = (sessionRows || []).map((s, idx) => ({
+      index: idx + 1,
+      slug: s.slug,
+      createdAt: s.created_at,
+      finalUrl: s.final_url,
+      finalVideoUrl: s.final_video_url,
+      photoUrls: Array.isArray(s.photo_urls) ? s.photo_urls : [],
+      burstVideoUrls: Array.isArray(s.burst_video_urls) ? s.burst_video_urls : [],
+    }));
+
+    return (
+      <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" />
+    );
   }
 
-  const eventName = data?.event_id ? await getPublicEventName(supabase, data.event_id) : "";
-
-  return <GalleryClient gallery={gallery} eventName={eventName} initialError="" />;
+  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" />;
 }
