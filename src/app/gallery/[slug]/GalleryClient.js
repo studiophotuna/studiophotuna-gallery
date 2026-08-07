@@ -403,6 +403,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
         ) : isSessionPicker ? (
           <div style={styles.sessionList}>
             <p style={styles.sessionPickerHint}>Select your session to view your photos</p>
+            <div style={styles.sessionGrid}>
             {sessions.map((session) => {
               const thumbUrl = session.finalUrl || session.photoUrls[0] || null;
               const photoCount = (session.finalUrl ? 1 : 0) + session.photoUrls.length;
@@ -411,7 +412,6 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                 ? new Date(session.createdAt).toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",
-                    year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                   })
@@ -435,7 +435,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                       <img src={thumbUrl} alt="" style={styles.sessionThumbImg} />
                     ) : (
                       <div style={styles.sessionThumbPlaceholder}>
-                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
@@ -446,10 +446,10 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                     {dateLabel ? <div style={styles.sessionCardMeta}>{dateLabel}</div> : null}
                     {mediaLabel ? <div style={styles.sessionCardCount}>{mediaLabel}</div> : null}
                   </div>
-                  <div style={styles.sessionCardChevron}>›</div>
                 </button>
               );
             })}
+            </div>
           </div>
         ) : filteredItems.length === 0 ? (
           <div style={styles.emptyFilter}>
@@ -759,34 +759,33 @@ const styles = {
   },
   // Session picker
   sessionList: {
-    padding: "4px 16px 24px",
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
+    padding: "4px 12px 24px",
   },
   sessionPickerHint: {
-    margin: "8px 0 4px",
+    margin: "8px 0 12px",
     fontSize: 13,
     color: "#9ca3af",
     textAlign: "center",
   },
+  sessionGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
+  },
   sessionCard: {
     display: "flex",
-    alignItems: "center",
-    gap: 14,
-    padding: "12px 14px",
-    borderRadius: 16,
+    flexDirection: "column",
+    borderRadius: 14,
     border: "1px solid #e5e7eb",
     background: "#ffffff",
     textAlign: "left",
-    width: "100%",
+    overflow: "hidden",
     cursor: "pointer",
+    padding: 0,
   },
   sessionThumb: {
-    flexShrink: 0,
-    width: 66,
-    height: 66,
-    borderRadius: 10,
+    width: "100%",
+    aspectRatio: "4 / 3",
     overflow: "hidden",
     background: "#f4f4f5",
   },
@@ -805,29 +804,22 @@ const styles = {
     color: "#d4d4d8",
   },
   sessionCardInfo: {
-    flex: 1,
-    minWidth: 0,
+    padding: "10px 12px 12px",
   },
   sessionCardTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 700,
     color: "#111111",
   },
   sessionCardMeta: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#71717a",
     marginTop: 3,
   },
   sessionCardCount: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#a1a1aa",
     marginTop: 2,
-  },
-  sessionCardChevron: {
-    fontSize: 24,
-    color: "#d4d4d8",
-    flexShrink: 0,
-    lineHeight: 1,
   },
   // Bottom bar
   bottomBar: {
