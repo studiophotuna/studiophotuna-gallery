@@ -62,34 +62,43 @@ export default function BrandingEditor({ eventId }) {
   }
 
   async function saveBranding() {
-    const supabase = getSupabaseBrowser();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setError("Session expired. Please use the link from Studio Photuna again."); return; }
-
     setSaving(true);
     setError("");
-    const { error: upsertError } = await supabase
-      .from("gallery_event_branding")
-      .upsert(
-        {
-          event_id: eventId,
-          owner_user_id: session.user.id,
-          accent_color: branding.accent_color || null,
-          bg_color: branding.bg_color || null,
-          text_color: branding.text_color || null,
-          secondary_text_color: branding.secondary_text_color || null,
-          event_name: eventName || null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "event_id" }
-      );
+    try {
+      const supabase = getSupabaseBrowser();
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session) {
+        setError("Session expired. Please use the link from Studio Photuna again.");
+        return;
+      }
 
-    setSaving(false);
-    if (upsertError) {
-      setError(upsertError.message || "Failed to save. Please try again.");
-    } else {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      const { error: upsertError } = await supabase
+        .from("gallery_event_branding")
+        .upsert(
+          {
+            event_id: eventId,
+            owner_user_id: data.session.user.id,
+            accent_color: branding.accent_color || null,
+            bg_color: branding.bg_color || null,
+            text_color: branding.text_color || null,
+            secondary_text_color: branding.secondary_text_color || null,
+            event_name: eventName || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "event_id" }
+        );
+
+      if (upsertError) {
+        setError(upsertError.message || "Failed to save. Please try again.");
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      }
+    } catch (err) {
+      console.error("saveBranding error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -185,7 +194,7 @@ export default function BrandingEditor({ eventId }) {
               ))}
             </div>
             <div style={styles.previewBottom}>
-              <div style={{ ...styles.previewBtn, background: previewAccent }}>
+              <div style={{ ...styles.previewBtn, background: previewAccent, color: contrastFor(previewAccent) }}>
                 Download All
               </div>
             </div>
@@ -211,6 +220,15 @@ export default function BrandingEditor({ eventId }) {
       </div>
     </div>
   );
+}
+
+function contrastFor(hex) {
+  const c = (hex || "#111111").replace("#", "");
+  if (c.length !== 6) return "#ffffff";
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 140 ? "#111111" : "#ffffff";
 }
 
 function ColorField({ label, value, onChange }) {
