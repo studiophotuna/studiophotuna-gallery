@@ -41,14 +41,18 @@ export default async function GalleryPage({ params }) {
   // Fetch per-event branding (operator-configured via gallery admin)
   let accentColor = null;
   let bgColor = null;
+  let textColor = null;
+  let secondaryTextColor = null;
   if (data?.event_id) {
     const { data: branding } = await supabase
       .from("gallery_event_branding")
-      .select("accent_color, bg_color")
+      .select("accent_color, bg_color, text_color, secondary_text_color")
       .eq("event_id", data.event_id)
       .maybeSingle();
     accentColor = branding?.accent_color || null;
     bgColor = branding?.bg_color || null;
+    textColor = branding?.text_color || null;
+    secondaryTextColor = branding?.secondary_text_color || null;
   }
 
   const galleryTier = data?.gallery_tier || "free";
@@ -73,9 +77,9 @@ export default async function GalleryPage({ params }) {
     }));
 
     return (
-      <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />
+      <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} textColor={textColor} secondaryTextColor={secondaryTextColor} />
     );
   }
 
-  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />;
+  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} textColor={textColor} secondaryTextColor={secondaryTextColor} />;
 }

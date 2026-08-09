@@ -5,7 +5,7 @@ import { getSupabaseBrowser } from "../../../../lib/supabase-browser";
 
 export default function BrandingEditor({ eventId }) {
   const [status, setStatus] = useState("loading"); // "loading" | "authed" | "unauthed"
-  const [branding, setBranding] = useState({ bg_color: "#ffffff", accent_color: "#111111" });
+  const [branding, setBranding] = useState({ bg_color: "#ffffff", accent_color: "#111111", text_color: "#111111", secondary_text_color: "#71717a" });
   const [eventName, setEventName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -37,7 +37,7 @@ export default function BrandingEditor({ eventId }) {
   async function loadBranding(supabase, evId) {
     const { data } = await supabase
       .from("gallery_event_branding")
-      .select("accent_color, bg_color, event_name")
+      .select("accent_color, bg_color, text_color, secondary_text_color, event_name")
       .eq("event_id", evId)
       .maybeSingle();
 
@@ -45,6 +45,8 @@ export default function BrandingEditor({ eventId }) {
       setBranding({
         bg_color: data.bg_color || "#ffffff",
         accent_color: data.accent_color || "#111111",
+        text_color: data.text_color || "#111111",
+        secondary_text_color: data.secondary_text_color || "#71717a",
       });
       if (data.event_name) setEventName(data.event_name);
     }
@@ -74,6 +76,8 @@ export default function BrandingEditor({ eventId }) {
           owner_user_id: session.user.id,
           accent_color: branding.accent_color || null,
           bg_color: branding.bg_color || null,
+          text_color: branding.text_color || null,
+          secondary_text_color: branding.secondary_text_color || null,
           event_name: eventName || null,
           updated_at: new Date().toISOString(),
         },
@@ -116,6 +120,8 @@ export default function BrandingEditor({ eventId }) {
 
   const previewBg = branding.bg_color || "#ffffff";
   const previewAccent = branding.accent_color || "#111111";
+  const previewText = branding.text_color || "#111111";
+  const previewSecondary = branding.secondary_text_color || "#71717a";
 
   return (
     <div style={styles.page}>
@@ -150,6 +156,16 @@ export default function BrandingEditor({ eventId }) {
               value={branding.accent_color || "#111111"}
               onChange={(v) => setBranding((p) => ({ ...p, accent_color: v }))}
             />
+            <ColorField
+              label="Primary Text Color"
+              value={branding.text_color || "#111111"}
+              onChange={(v) => setBranding((p) => ({ ...p, text_color: v }))}
+            />
+            <ColorField
+              label="Secondary Text Color"
+              value={branding.secondary_text_color || "#71717a"}
+              onChange={(v) => setBranding((p) => ({ ...p, secondary_text_color: v }))}
+            />
           </div>
         </div>
 
@@ -159,8 +175,8 @@ export default function BrandingEditor({ eventId }) {
           <div style={{ ...styles.preview, background: previewBg }}>
             <div style={styles.previewHeader}>
               <div>
-                <div style={styles.previewTitle}>{eventName || "Event Gallery"}</div>
-                <div style={styles.previewSubtitle}>12 Items</div>
+                <div style={{ ...styles.previewTitle, color: previewText }}>{eventName || "Event Gallery"}</div>
+                <div style={{ ...styles.previewSubtitle, color: previewSecondary }}>12 Items</div>
               </div>
             </div>
             <div style={styles.previewGrid}>

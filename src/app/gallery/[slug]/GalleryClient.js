@@ -12,10 +12,12 @@ const FILTERS = [
   { key: "video", label: "Videos" },
 ];
 
-export default function GalleryClient({ gallery, sessions = null, eventName = "", initialError = "", galleryTier = "free", accentColor = null, bgColor = null }) {
+export default function GalleryClient({ gallery, sessions = null, eventName = "", initialError = "", galleryTier = "free", accentColor = null, bgColor = null, textColor = null, secondaryTextColor = null }) {
   const isPaid = galleryTier !== "free";
   const resolvedBg = (isPaid && bgColor) ? bgColor : "#ffffff";
   const resolvedAccent = (isPaid && accentColor) ? accentColor : "#111111";
+  const resolvedText = (isPaid && textColor) ? textColor : "#111111";
+  const resolvedSecondary = (isPaid && secondaryTextColor) ? secondaryTextColor : "#71717a";
 
   const [selectedSession, setSelectedSession] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -347,6 +349,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   const pageStyle = {
     ...styles.page,
     background: resolvedBg,
+    color: resolvedText,
   };
 
   return (
@@ -365,7 +368,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
           )}
           <div style={styles.headerText}>
             <h1 style={styles.title}>{displayTitle}</h1>
-            {subtitle ? <div style={styles.subtitle}>{subtitle}</div> : null}
+            {subtitle ? <div style={{ ...styles.subtitle, color: resolvedSecondary }}>{subtitle}</div> : null}
           </div>
         </div>
         <div style={styles.headerActions}>
@@ -398,7 +401,8 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
               onClick={() => setFilter(item.key)}
               style={{
                 ...styles.tabBtn,
-                ...(filter === item.key ? styles.tabBtnActive : {}),
+                color: filter === item.key ? "#ffffff" : resolvedSecondary,
+                ...(filter === item.key ? { ...styles.tabBtnActive, background: resolvedAccent } : {}),
               }}
             >
               {item.label}
@@ -409,10 +413,10 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
 
       <section style={styles.gridScroll}>
         {isEmptyEventGallery ? (
-          <div style={styles.emptyFilter}>No sessions captured yet.</div>
+          <div style={{ ...styles.emptyFilter, color: resolvedSecondary }}>No sessions captured yet.</div>
         ) : isSessionPicker ? (
           <div style={styles.sessionList}>
-            <p style={styles.sessionPickerHint}>Select your session to view your photos</p>
+            <p style={{ ...styles.sessionPickerHint, color: resolvedSecondary }}>Select your session to view your photos</p>
             <div style={styles.sessionGrid}>
             {sessions.map((session) => {
               const thumbUrl = session.photoUrls[0] || session.finalUrl || null;
@@ -452,8 +456,8 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                     )}
                   </div>
                   <div style={styles.sessionCardInfo}>
-                    <div style={styles.sessionCardTitle}>Guest Photos {session.index}</div>
-                    {dateLabel ? <div style={styles.sessionCardMeta}>{dateLabel}</div> : null}
+                    <div style={{ ...styles.sessionCardTitle, color: resolvedText }}>Guest Photos {session.index}</div>
+                    {dateLabel ? <div style={{ ...styles.sessionCardMeta, color: resolvedSecondary }}>{dateLabel}</div> : null}
                     {mediaLabel ? <div style={styles.sessionCardCount}>{mediaLabel}</div> : null}
                   </div>
                 </button>
@@ -462,7 +466,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
             </div>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div style={styles.emptyFilter}>
+          <div style={{ ...styles.emptyFilter, color: resolvedSecondary }}>
             No {filter === "video" ? "videos" : "photos"} yet.
           </div>
         ) : (
