@@ -12,7 +12,11 @@ const FILTERS = [
   { key: "video", label: "Videos" },
 ];
 
-export default function GalleryClient({ gallery, sessions = null, eventName = "", initialError = "" }) {
+export default function GalleryClient({ gallery, sessions = null, eventName = "", initialError = "", galleryTier = "free", accentColor = null, bgColor = null }) {
+  const isPaid = galleryTier !== "free";
+  const resolvedBg = (isPaid && bgColor) ? bgColor : "#ffffff";
+  const resolvedAccent = (isPaid && accentColor) ? accentColor : "#111111";
+
   const [selectedSession, setSelectedSession] = useState(null);
   const [filter, setFilter] = useState("all");
   const [detailOpen, setDetailOpen] = useState(false);
@@ -22,6 +26,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -339,8 +344,13 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
       .join(" · ");
   }
 
+  const pageStyle = {
+    ...styles.page,
+    background: resolvedBg,
+  };
+
   return (
-    <main style={styles.page}>
+    <main style={pageStyle}>
       <header style={styles.header}>
         <div style={styles.headerLeft}>
           {selectedSession && (
@@ -481,16 +491,26 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
       </section>
 
       {!isSessionPicker && !isEmptyEventGallery && (
-        <div style={styles.bottomBar}>
+        <div style={{ ...styles.bottomBar, background: resolvedBg }}>
           <button
             type="button"
             onClick={downloadAllItems}
             disabled={downloadingAll || !filteredItems.length}
-            style={styles.downloadAllBtn}
+            style={{ ...styles.downloadAllBtn, background: resolvedAccent }}
           >
             <DownloadIcon />
             <span>{downloadingAll ? "Downloading..." : "Download All"}</span>
           </button>
+          {isPaid && (
+            <button
+              type="button"
+              onClick={() => setEmbedOpen(true)}
+              style={styles.embedBtn}
+              aria-label="Get embed code"
+            >
+              {"</>"} Embed
+            </button>
+          )}
         </div>
       )}
 
@@ -519,7 +539,49 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
         subtitle="Scan to open this gallery on your own phone."
         onClose={() => setQrOpen(false)}
       />
+
+      {embedOpen && (
+        <EmbedModal
+          url={typeof window !== "undefined" ? window.location.href : ""}
+          title={displayTitle}
+          onClose={() => setEmbedOpen(false)}
+        />
+      )}
     </main>
+  );
+}
+
+function EmbedModal({ url, title, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const iframeCode = `<iframe\n  src="${url}"\n  title="${title}"\n  width="100%"\n  height="600"\n  frameborder="0"\n  allow="clipboard-write; web-share"\n  style="border:none; border-radius:12px;"\n></iframe>`;
+
+  function copyCode() {
+    navigator.clipboard.writeText(iframeCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      window.prompt("Copy this embed code:", iframeCode);
+    });
+  }
+
+  return (
+    <div style={styles.embedOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={styles.embedSheet}>
+        <div style={styles.embedHeader}>
+          <div style={styles.embedTitle}>Embed Album</div>
+          <button type="button" onClick={onClose} style={styles.embedCloseBtn} aria-label="Close">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p style={styles.embedDesc}>Paste this code into any webpage to embed this gallery album.</p>
+        <pre style={styles.embedCode}>{iframeCode}</pre>
+        <button type="button" onClick={copyCode} style={styles.embedCopyBtn}>
+          {copied ? "Copied!" : "Copy Code"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -827,6 +889,9 @@ const styles = {
       "12px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))",
     background: "#ffffff",
     borderTop: "1px solid #f0f0f0",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
   },
   downloadAllBtn: {
     width: "100%",
@@ -841,6 +906,91 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+  },
+  embedBtn: {
+    width: "100%",
+    height: 44,
+    borderRadius: 999,
+    border: "1.5px solid #e5e7eb",
+    background: "transparent",
+    color: "#6b7280",
+    fontSize: 14,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    cursor: "pointer",
+  },
+  // Embed modal
+  embedOverlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 70,
+    background: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  embedSheet: {
+    background: "#ffffff",
+    borderRadius: "20px 20px 0 0",
+    padding: "24px 20px calc(24px + env(safe-area-inset-bottom))",
+    width: "100%",
+    maxWidth: 600,
+    boxShadow: "0 -8px 40px rgba(0,0,0,0.16)",
+  },
+  embedHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  embedTitle: {
+    fontSize: 17,
+    fontWeight: 800,
+    color: "#111111",
+  },
+  embedCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    border: "1px solid #e5e7eb",
+    background: "#f9f9f9",
+    color: "#374151",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+  },
+  embedDesc: {
+    margin: "0 0 14px",
+    fontSize: 13,
+    color: "#71717a",
+    lineHeight: 1.5,
+  },
+  embedCode: {
+    background: "#f4f4f5",
+    borderRadius: 10,
+    padding: "14px 16px",
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: "#1f2937",
+    overflowX: "auto",
+    whiteSpace: "pre",
+    margin: "0 0 14px",
+    fontFamily: "monospace",
+  },
+  embedCopyBtn: {
+    width: "100%",
+    height: 48,
+    borderRadius: 999,
+    border: "none",
+    background: "#111111",
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: 800,
+    cursor: "pointer",
   },
   // Detail overlay
   detailOverlay: {

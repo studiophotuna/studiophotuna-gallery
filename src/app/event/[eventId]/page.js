@@ -22,7 +22,7 @@ export default async function EventGalleryPage({ params }) {
 
   const { data, error } = await supabase
     .from("galleries")
-    .select("slug, final_url, final_video_url, photo_urls, created_at")
+    .select("slug, final_url, final_video_url, photo_urls, created_at, gallery_tier")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
 
@@ -37,6 +37,7 @@ export default async function EventGalleryPage({ params }) {
   }
 
   const eventName = await getPublicEventName(supabase, eventId);
+  const galleryTier = data?.[0]?.gallery_tier || "free";
 
-  return <EventGalleryClient sessions={data || []} eventName={eventName} initialError="" />;
+  return <EventGalleryClient sessions={data || []} eventName={eventName} initialError="" galleryTier={galleryTier} />;
 }

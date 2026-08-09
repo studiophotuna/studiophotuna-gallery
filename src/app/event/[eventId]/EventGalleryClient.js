@@ -25,7 +25,7 @@ function getSessionThumbnail(session) {
   return null;
 }
 
-export default function EventGalleryClient({ sessions, eventName = "", initialError = "" }) {
+export default function EventGalleryClient({ sessions, eventName = "", initialError = "", galleryTier = "free" }) {
   const [sharing, setSharing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -66,6 +66,15 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
 
   if (initialError) {
     return <StatusView title="Unable to load event gallery." detail={initialError} />;
+  }
+
+  if (galleryTier === "free") {
+    return (
+      <StatusView
+        title="Event Gallery unavailable"
+        detail="The Event Link feature requires a Plus or Business gallery plan. Contact the event organizer for your individual gallery link."
+      />
+    );
   }
 
   if (!tiles.length) {

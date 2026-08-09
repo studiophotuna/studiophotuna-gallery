@@ -22,7 +22,7 @@ export default async function GalleryPage({ params }) {
   const { data, error } = await supabase
     .from("galleries")
     .select(
-      "slug, session_id, event_id, final_url, final_video_url, photo_urls, burst_video_urls, expires_at, created_at"
+      "slug, session_id, event_id, final_url, final_video_url, photo_urls, burst_video_urls, expires_at, created_at, gallery_tier, accent_color, bg_color"
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -57,10 +57,18 @@ export default async function GalleryPage({ params }) {
       burstVideoUrls: Array.isArray(s.burst_video_urls) ? s.burst_video_urls : [],
     }));
 
+    const galleryTier = data.gallery_tier || "free";
+    const accentColor = data.accent_color || null;
+    const bgColor = data.bg_color || null;
+
     return (
-      <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" />
+      <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />
     );
   }
 
-  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" />;
+  const galleryTier = data?.gallery_tier || "free";
+  const accentColor = data?.accent_color || null;
+  const bgColor = data?.bg_color || null;
+
+  return <GalleryClient gallery={data || null} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />;
 }
