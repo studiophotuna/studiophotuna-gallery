@@ -38,6 +38,21 @@ export default async function GalleryPage({ params }) {
 
   const eventName = data?.event_id ? await getPublicEventName(supabase, data.event_id) : "";
 
+  // Fetch per-event branding (operator-configured via gallery admin)
+  let accentColor = null;
+  let bgColor = null;
+  if (data?.event_id) {
+    const { data: branding } = await supabase
+      .from("gallery_event_branding")
+      .select("accent_color, bg_color")
+      .eq("event_id", data.event_id)
+      .maybeSingle();
+    accentColor = branding?.accent_color || null;
+    bgColor = branding?.bg_color || null;
+  }
+
+  const galleryTier = data?.gallery_tier || "free";
+
   // Event-level gallery (session_id is null): show a per-session picker
   if (data && data.session_id === null && data.event_id) {
     const { data: sessionRows } = await supabase
@@ -57,18 +72,10 @@ export default async function GalleryPage({ params }) {
       burstVideoUrls: Array.isArray(s.burst_video_urls) ? s.burst_video_urls : [],
     }));
 
-    const galleryTier = data.gallery_tier || "free";
-    const accentColor = data.accent_color || null;
-    const bgColor = data.bg_color || null;
-
     return (
       <GalleryClient gallery={data} sessions={sessions} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />
     );
   }
-
-  const galleryTier = data?.gallery_tier || "free";
-  const accentColor = data?.accent_color || null;
-  const bgColor = data?.bg_color || null;
 
   return <GalleryClient gallery={data || null} eventName={eventName} initialError="" galleryTier={galleryTier} accentColor={accentColor} bgColor={bgColor} />;
 }
