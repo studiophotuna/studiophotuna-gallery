@@ -3,10 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseBrowser } from "../lib/supabase-browser";
 
-export default function BrandingEditor({ eventId, gallerySlug = null }) {
+export default function BrandingEditor({ eventId, gallerySlug = null, initialBranding = null }) {
   const [status, setStatus] = useState("loading"); // "loading" | "authed" | "unauthed"
-  const [branding, setBranding] = useState({ bg_color: "#ffffff", accent_color: "#111111", text_color: "#111111", secondary_text_color: "#71717a" });
-  const [eventName, setEventName] = useState("");
+  const [branding, setBranding] = useState({
+    bg_color: initialBranding?.bg_color || "#ffffff",
+    accent_color: initialBranding?.accent_color || "#111111",
+    text_color: initialBranding?.text_color || "#111111",
+    secondary_text_color: initialBranding?.secondary_text_color || "#71717a",
+  });
+  const [eventName, setEventName] = useState(initialBranding?.event_name || "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -16,11 +21,10 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
     const supabase = getSupabaseBrowser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session?.user) {
           sessionRef.current = session;
           setStatus("authed");
-          await loadBranding(supabase, eventId);
         } else if (event === "INITIAL_SESSION" && !session) {
           const hash = typeof window !== "undefined" ? window.location.hash : "";
           if (!hash.includes("access_token")) {
@@ -33,33 +37,6 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
 
     return () => subscription.unsubscribe();
   }, [eventId]);
-
-  async function loadBranding(supabase, evId) {
-    const { data } = await supabase
-      .from("gallery_event_branding")
-      .select("accent_color, bg_color, text_color, secondary_text_color, event_name")
-      .eq("event_id", evId)
-      .maybeSingle();
-
-    if (data) {
-      setBranding({
-        bg_color: data.bg_color || "#ffffff",
-        accent_color: data.accent_color || "#111111",
-        text_color: data.text_color || "#111111",
-        secondary_text_color: data.secondary_text_color || "#71717a",
-      });
-      if (data.event_name) setEventName(data.event_name);
-    }
-
-    if (!data?.event_name) {
-      try {
-        const { data: name } = await supabase.rpc("get_public_event_name", {
-          p_event_id: evId,
-        });
-        if (name) setEventName(name);
-      } catch {}
-    }
-  }
 
   async function saveBranding() {
     setSaving(true);

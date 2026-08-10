@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getSupabaseClient } from "../../../../lib/supabase";
 import BrandingEditor from "../../../../components/BrandingEditor";
 
@@ -23,5 +25,17 @@ export default async function AdminGalleryPage({ params }) {
     return <div style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>Gallery not found: {slug}</div>;
   }
 
-  return <BrandingEditor eventId={data.event_id} gallerySlug={slug} />;
+  const { data: branding } = await supabase
+    .from("gallery_event_branding")
+    .select("accent_color, bg_color, text_color, secondary_text_color, event_name")
+    .eq("event_id", data.event_id)
+    .maybeSingle();
+
+  return (
+    <BrandingEditor
+      eventId={data.event_id}
+      gallerySlug={slug}
+      initialBranding={branding || null}
+    />
+  );
 }
