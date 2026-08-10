@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getSupabaseClient } from "../../../lib/supabase";
 import { getPublicEventName } from "../../../lib/eventName";
 import GalleryClient from "./GalleryClient";
