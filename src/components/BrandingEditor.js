@@ -10,7 +10,7 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-  const userId = useRef(null);
+  const sessionRef = useRef(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowser();
@@ -18,7 +18,7 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          userId.current = session.user.id;
+          sessionRef.current = session;
           setStatus("authed");
           await loadBranding(supabase, eventId);
         } else if (event === "INITIAL_SESSION" && !session) {
@@ -71,12 +71,8 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
         return;
       }
 
-      const sessionResult = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timed out")), 8000)),
-      ]);
-      const session = sessionResult?.data?.session;
-      if (!session) {
+      const session = sessionRef.current;
+      if (!session?.user) {
         setError("Session expired. Please use the link from Studio Photuna again.");
         return;
       }
