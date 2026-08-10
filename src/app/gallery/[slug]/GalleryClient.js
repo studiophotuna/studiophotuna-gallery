@@ -467,7 +467,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                   <div style={styles.sessionCardInfo}>
                     <div style={{ ...styles.sessionCardTitle, color: resolvedText }}>Guest Photos {session.index}</div>
                     {dateLabel ? <div style={{ ...styles.sessionCardMeta, color: resolvedSecondary }}>{dateLabel}</div> : null}
-                    {mediaLabel ? <div style={styles.sessionCardCount}>{mediaLabel}</div> : null}
+                    {mediaLabel ? <div style={{ ...styles.sessionCardCount, color: resolvedAccent }}>{mediaLabel}</div> : null}
                   </div>
                 </button>
               );
