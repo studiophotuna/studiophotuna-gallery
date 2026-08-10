@@ -66,18 +66,26 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
     setError("");
     try {
       const supabase = getSupabaseBrowser();
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) {
+      if (!supabase) {
+        setError("Gallery not configured. Check Supabase environment variables.");
+        return;
+      }
+
+      const sessionResult = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timed out")), 8000)),
+      ]);
+      const session = sessionResult?.data?.session;
+      if (!session) {
         setError("Session expired. Please use the link from Studio Photuna again.");
         return;
       }
 
-      const { error: upsertError } = await supabase
-        .from("gallery_event_branding")
-        .upsert(
+      const upsertResult = await Promise.race([
+        supabase.from("gallery_event_branding").upsert(
           {
             event_id: eventId,
-            owner_user_id: data.session.user.id,
+            owner_user_id: session.user.id,
             accent_color: branding.accent_color || null,
             bg_color: branding.bg_color || null,
             text_color: branding.text_color || null,
@@ -86,17 +94,19 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
             updated_at: new Date().toISOString(),
           },
           { onConflict: "event_id" }
-        );
+        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Save timed out after 10s. Check your connection.")), 10000)),
+      ]);
 
-      if (upsertError) {
-        setError(upsertError.message || "Failed to save. Please try again.");
+      if (upsertResult.error) {
+        setError(upsertResult.error.message || "Failed to save. Please try again.");
       } else {
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
       }
     } catch (err) {
       console.error("saveBranding error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setSaving(false);
     }
