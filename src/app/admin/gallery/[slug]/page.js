@@ -1,5 +1,5 @@
 import { getSupabaseClient } from "../../../../lib/supabase";
-import BrandingEditor from "../../event/[eventId]/BrandingEditor";
+import BrandingEditor from "../../../../components/BrandingEditor";
 
 export default async function AdminGalleryPage({ params }) {
   const { slug = "" } = await params;
