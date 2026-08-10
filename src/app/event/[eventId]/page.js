@@ -39,5 +39,22 @@ export default async function EventGalleryPage({ params }) {
   const eventName = await getPublicEventName(supabase, eventId);
   const galleryTier = data?.[0]?.gallery_tier || "free";
 
-  return <EventGalleryClient sessions={data || []} eventName={eventName} initialError="" galleryTier={galleryTier} />;
+  const { data: branding } = await supabase
+    .from("gallery_event_branding")
+    .select("accent_color, bg_color, text_color, secondary_text_color")
+    .eq("event_id", eventId)
+    .maybeSingle();
+
+  return (
+    <EventGalleryClient
+      sessions={data || []}
+      eventName={eventName}
+      initialError=""
+      galleryTier={galleryTier}
+      accentColor={branding?.accent_color || null}
+      bgColor={branding?.bg_color || null}
+      textColor={branding?.text_color || null}
+      secondaryTextColor={branding?.secondary_text_color || null}
+    />
+  );
 }

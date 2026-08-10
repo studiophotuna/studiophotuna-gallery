@@ -142,7 +142,7 @@ export default function BrandingEditor({ eventId }) {
             <h1 style={styles.title}>{eventName || eventId}</h1>
           </div>
           <a
-            href={`/gallery/${eventId}`}
+            href={`/event/${eventId}`}
             target="_blank"
             rel="noopener noreferrer"
             style={styles.viewLink}

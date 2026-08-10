@@ -25,7 +25,13 @@ function getSessionThumbnail(session) {
   return null;
 }
 
-export default function EventGalleryClient({ sessions, eventName = "", initialError = "", galleryTier = "free" }) {
+export default function EventGalleryClient({ sessions, eventName = "", initialError = "", galleryTier = "free", accentColor = null, bgColor = null, textColor = null, secondaryTextColor = null }) {
+  const isPaid = galleryTier !== "free";
+  const resolvedBg     = (isPaid && bgColor)            ? bgColor            : "#ffffff";
+  const resolvedAccent = (isPaid && accentColor)         ? accentColor         : "#111111";
+  const resolvedText   = (isPaid && textColor)           ? textColor           : "#111111";
+  const resolvedSecondary = (isPaid && secondaryTextColor) ? secondaryTextColor : "#71717a";
+
   const [sharing, setSharing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -103,19 +109,19 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
     .join(" · ");
 
   return (
-    <main style={styles.page}>
-      <header style={styles.header}>
+    <main style={{ ...styles.page, background: resolvedBg, color: resolvedText }}>
+      <header style={{ ...styles.header, background: `${resolvedBg}ec`, borderBottomColor: `${resolvedText}18` }}>
         <div style={styles.headerInner}>
           <div style={styles.headerText}>
-            <h1 style={styles.title}>{displayTitle}</h1>
-            <div style={styles.subtitle}>{subtitle}</div>
+            <h1 style={{ ...styles.title, color: resolvedText }}>{displayTitle}</h1>
+            <div style={{ ...styles.subtitle, color: resolvedSecondary }}>{subtitle}</div>
           </div>
           <div style={styles.headerActions}>
             <button
               type="button"
               onClick={() => sharePage(displayTitle)}
               disabled={sharing}
-              style={styles.iconCircleBtn}
+              style={{ ...styles.iconCircleBtn, background: resolvedBg, color: resolvedAccent, borderColor: `${resolvedText}22` }}
               aria-label="Share event gallery"
             >
               <ShareIcon />
@@ -123,7 +129,7 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
             <button
               type="button"
               onClick={() => setQrOpen(true)}
-              style={styles.iconCircleBtn}
+              style={{ ...styles.iconCircleBtn, background: resolvedBg, color: resolvedAccent, borderColor: `${resolvedText}22` }}
               aria-label="Show QR code"
             >
               <QrIcon />
