@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getSupabaseBrowser } from "../../../../lib/supabase-browser";
 
-export default function BrandingEditor({ eventId }) {
+export default function BrandingEditor({ eventId, gallerySlug = null }) {
   const [status, setStatus] = useState("loading"); // "loading" | "authed" | "unauthed"
   const [branding, setBranding] = useState({ bg_color: "#ffffff", accent_color: "#111111", text_color: "#111111", secondary_text_color: "#71717a" });
   const [eventName, setEventName] = useState("");
@@ -142,7 +142,7 @@ export default function BrandingEditor({ eventId }) {
             <h1 style={styles.title}>{eventName || eventId}</h1>
           </div>
           <a
-            href={`/event/${eventId}`}
+            href={gallerySlug ? `/gallery/${gallerySlug}` : `/event/${eventId}`}
             target="_blank"
             rel="noopener noreferrer"
             style={styles.viewLink}
