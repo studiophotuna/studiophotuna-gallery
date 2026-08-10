@@ -64,46 +64,49 @@ export default function BrandingEditor({ eventId, gallerySlug = null }) {
   async function saveBranding() {
     setSaving(true);
     setError("");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const supabase = getSupabaseBrowser();
-      if (!supabase) {
-        setError("Gallery not configured. Check Supabase environment variables.");
-        return;
-      }
-
       const session = sessionRef.current;
-      if (!session?.user) {
+      if (!session?.access_token) {
         setError("Session expired. Please use the link from Studio Photuna again.");
         return;
       }
 
-      const upsertResult = await Promise.race([
-        supabase.from("gallery_event_branding").upsert(
-          {
-            event_id: eventId,
-            owner_user_id: session.user.id,
-            accent_color: branding.accent_color || null,
-            bg_color: branding.bg_color || null,
-            text_color: branding.text_color || null,
-            secondary_text_color: branding.secondary_text_color || null,
-            event_name: eventName || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "event_id" }
-        ),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Save timed out after 10s. Check your connection.")), 10000)),
-      ]);
+      const res = await fetch("/api/save-branding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          eventId,
+          accentColor: branding.accent_color || null,
+          bgColor: branding.bg_color || null,
+          textColor: branding.text_color || null,
+          secondaryTextColor: branding.secondary_text_color || null,
+          eventName: eventName || null,
+        }),
+        signal: controller.signal,
+      });
 
-      if (upsertResult.error) {
-        setError(upsertResult.error.message || "Failed to save. Please try again.");
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error || "Failed to save. Please try again.");
       } else {
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
       }
     } catch (err) {
       console.error("saveBranding error:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      setError(
+        err.name === "AbortError"
+          ? "Save timed out. Check your connection."
+          : err.message || "An unexpected error occurred."
+      );
     } finally {
+      clearTimeout(timeout);
       setSaving(false);
     }
   }
