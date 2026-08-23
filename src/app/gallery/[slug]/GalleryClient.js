@@ -36,6 +36,8 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   const iconBtnBorder = isDark ? "rgba(255,255,255,0.18)" : "#e5e7eb";
   const thumbPlaceholderColor = isDark ? "rgba(255,255,255,0.2)" : "#d4d4d8";
   const dividerColor = isDark ? "rgba(255,255,255,0.08)" : "#f0f0f0";
+  const tileBg = isDark ? "rgba(255,255,255,0.08)" : "#f4f4f5";
+  const tileBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
   const [selectedSession, setSelectedSession] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -494,7 +496,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                 key={item.key}
                 type="button"
                 onClick={() => openDetail(index)}
-                style={styles.tile}
+                style={{ ...styles.tile, background: tileBg, borderColor: tileBorder }}
               >
                 {item.type === "video" ? (
                   <VideoThumbnail src={item.url} style={styles.tileMedia} />
