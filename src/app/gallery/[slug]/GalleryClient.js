@@ -419,7 +419,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
               onClick={() => setFilter(item.key)}
               style={{
                 ...styles.tabBtn,
-                color: filter === item.key ? "#ffffff" : resolvedSecondary,
+                color: filter === item.key ? contrastFor(resolvedAccent) : resolvedSecondary,
                 ...(filter === item.key ? { ...styles.tabBtnActive, background: resolvedAccent } : {}),
               }}
             >
