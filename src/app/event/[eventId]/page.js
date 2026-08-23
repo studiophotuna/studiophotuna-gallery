@@ -38,14 +38,19 @@ export default async function EventGalleryPage({ params }) {
     );
   }
 
-  const eventName = await getPublicEventName(supabase, eventId);
   const galleryTier = data?.[0]?.gallery_tier || "free";
 
-  const { data: branding } = await supabase
-    .from("gallery_event_branding")
-    .select("accent_color, bg_color, text_color, secondary_text_color")
-    .eq("event_id", eventId)
-    .maybeSingle();
+  const [rpcEventName, brandingResult] = await Promise.all([
+    getPublicEventName(supabase, eventId),
+    supabase
+      .from("gallery_event_branding")
+      .select("accent_color, bg_color, text_color, secondary_text_color, event_name")
+      .eq("event_id", eventId)
+      .maybeSingle(),
+  ]);
+
+  const branding = brandingResult?.data || null;
+  const eventName = branding?.event_name || rpcEventName;
 
   return (
     <EventGalleryClient

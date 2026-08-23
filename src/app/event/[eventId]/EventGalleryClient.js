@@ -32,6 +32,18 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
   const resolvedText   = (isPaid && textColor)           ? textColor           : "#111111";
   const resolvedSecondary = (isPaid && secondaryTextColor) ? secondaryTextColor : "#71717a";
 
+  function contrastFor(hex) {
+    const c = (hex || "#111111").replace("#", "");
+    if (c.length !== 6) return "#ffffff";
+    const r = parseInt(c.slice(0, 2), 16);
+    const g = parseInt(c.slice(2, 4), 16);
+    const b = parseInt(c.slice(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 140 ? "#111111" : "#ffffff";
+  }
+  const isDark = contrastFor(resolvedBg) === "#ffffff";
+  const tileBg = isDark ? "rgba(255,255,255,0.08)" : "#f4f4f5";
+  const tileBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
+
   const [sharing, setSharing] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -141,7 +153,7 @@ export default function EventGalleryClient({ sessions, eventName = "", initialEr
       <section style={styles.gridWrap}>
         <div style={styles.grid}>
           {tiles.map((tile) => (
-            <Link key={tile.slug} href={`/gallery/${tile.slug}`} style={styles.tile}>
+            <Link key={tile.slug} href={`/gallery/${tile.slug}`} style={{ ...styles.tile, background: tileBg, borderColor: tileBorder }}>
               {tile.thumbnail.type === "video" ? (
                 <VideoThumbnail src={tile.thumbnail.url} style={styles.tileMedia} />
               ) : (

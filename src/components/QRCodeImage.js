@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
-export default function QRCodeImage({ value, size = 220 }) {
+export default function QRCodeImage({ value, size = 220, fgColor = "#111111", lightColor = "#ffffff" }) {
   const [dataUrl, setDataUrl] = useState("");
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export default function QRCodeImage({ value, size = 220 }) {
     QRCode.toDataURL(value, {
       width: size,
       margin: 1,
-      color: { dark: "#111111", light: "#ffffff" },
+      color: { dark: fgColor, light: lightColor },
     })
       .then((url) => {
         if (!cancelled) setDataUrl(url);
@@ -23,7 +23,7 @@ export default function QRCodeImage({ value, size = 220 }) {
     return () => {
       cancelled = true;
     };
-  }, [value, size]);
+  }, [value, size, fgColor, lightColor]);
 
   if (!dataUrl) {
     return (

@@ -28,6 +28,15 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   const resolvedText = (isPaid && textColor) ? textColor : "#111111";
   const resolvedSecondary = (isPaid && secondaryTextColor) ? secondaryTextColor : "#71717a";
 
+  // Derive adaptive UI colors from the page background
+  const isDark = contrastFor(resolvedBg) === "#ffffff";
+  const cardBg = isDark ? "rgba(255,255,255,0.08)" : "#ffffff";
+  const cardBorder = isDark ? "rgba(255,255,255,0.12)" : "#e5e7eb";
+  const iconBtnBg = isDark ? "rgba(255,255,255,0.10)" : "#ffffff";
+  const iconBtnBorder = isDark ? "rgba(255,255,255,0.18)" : "#e5e7eb";
+  const thumbPlaceholderColor = isDark ? "rgba(255,255,255,0.2)" : "#d4d4d8";
+  const dividerColor = isDark ? "rgba(255,255,255,0.08)" : "#f0f0f0";
+
   const [selectedSession, setSelectedSession] = useState(null);
   const [filter, setFilter] = useState("all");
   const [detailOpen, setDetailOpen] = useState(false);
@@ -369,7 +378,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
             <button
               type="button"
               onClick={() => setSelectedSession(null)}
-              style={styles.iconCircleBtn}
+              style={{ ...styles.iconCircleBtn, background: iconBtnBg, borderColor: iconBtnBorder, color: resolvedText }}
               aria-label="Back to sessions"
             >
               <BackIcon />
@@ -385,7 +394,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
             type="button"
             onClick={() => shareGallery(displayTitle)}
             disabled={sharing}
-            style={styles.iconCircleBtn}
+            style={{ ...styles.iconCircleBtn, background: iconBtnBg, borderColor: iconBtnBorder, color: resolvedText }}
             aria-label="Share gallery"
           >
             <ShareIcon />
@@ -393,7 +402,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
           <button
             type="button"
             onClick={() => setQrOpen(true)}
-            style={styles.iconCircleBtn}
+            style={{ ...styles.iconCircleBtn, background: iconBtnBg, borderColor: iconBtnBorder, color: resolvedText }}
             aria-label="Show QR code"
           >
             <QrIcon />
@@ -451,13 +460,13 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
                   key={session.index}
                   type="button"
                   onClick={() => setSelectedSession(session)}
-                  style={styles.sessionCard}
+                  style={{ ...styles.sessionCard, background: cardBg, borderColor: cardBorder }}
                 >
                   <div style={styles.sessionThumb}>
                     {thumbUrl ? (
                       <img src={thumbUrl} alt="" style={styles.sessionThumbImg} />
                     ) : (
-                      <div style={styles.sessionThumbPlaceholder}>
+                      <div style={{ ...styles.sessionThumbPlaceholder, color: thumbPlaceholderColor }}>
                         <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -504,7 +513,7 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
       </section>
 
       {!isSessionPicker && !isEmptyEventGallery && (
-        <div style={{ ...styles.bottomBar, background: resolvedBg }}>
+        <div style={{ ...styles.bottomBar, background: resolvedBg, borderTopColor: dividerColor }}>
           <button
             type="button"
             onClick={downloadAllItems}

@@ -137,6 +137,19 @@ export default function BrandingEditor({ eventId, gallerySlug = null, initialBra
           </a>
         </header>
 
+        {/* Event name */}
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Event Name</div>
+          <input
+            type="text"
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            placeholder="e.g. Sarah &amp; James Wedding"
+            style={styles.nameInput}
+          />
+          <p style={styles.nameHint}>Shown as the gallery title on all public pages.</p>
+        </div>
+
         {/* Color pickers */}
         <div style={styles.card}>
           <div style={styles.cardTitle}>Colors</div>
@@ -405,6 +418,23 @@ const styles = {
     fontSize: 12,
     color: "#9ca3af",
     textAlign: "center",
+  },
+  nameInput: {
+    display: "block",
+    width: "100%",
+    height: 44,
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    padding: "0 14px",
+    fontSize: 14,
+    color: "#111111",
+    background: "#ffffff",
+    boxSizing: "border-box",
+  },
+  nameHint: {
+    margin: "8px 0 0",
+    fontSize: 12,
+    color: "#9ca3af",
   },
   fullCenter: {
     minHeight: "100vh",

@@ -38,24 +38,27 @@ export default async function GalleryPage({ params }) {
     );
   }
 
-  const eventName = data?.event_id ? await getPublicEventName(supabase, data.event_id) : "";
-
   // Fetch per-event branding (operator-configured via gallery admin)
   let accentColor = null;
   let bgColor = null;
   let textColor = null;
   let secondaryTextColor = null;
+  let brandingEventName = null;
   if (data?.event_id) {
     const { data: branding } = await supabase
       .from("gallery_event_branding")
-      .select("accent_color, bg_color, text_color, secondary_text_color")
+      .select("accent_color, bg_color, text_color, secondary_text_color, event_name")
       .eq("event_id", data.event_id)
       .maybeSingle();
     accentColor = branding?.accent_color || null;
     bgColor = branding?.bg_color || null;
     textColor = branding?.text_color || null;
     secondaryTextColor = branding?.secondary_text_color || null;
+    brandingEventName = branding?.event_name || null;
   }
+
+  const rpcEventName = data?.event_id ? await getPublicEventName(supabase, data.event_id) : "";
+  const eventName = brandingEventName || rpcEventName;
 
   const galleryTier = data?.gallery_tier || "free";
 

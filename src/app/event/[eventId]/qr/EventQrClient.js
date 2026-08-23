@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import QRCodeImage from "../../../../components/QRCodeImage";
 import StatusView from "../../../../components/StatusView";
 
-export default function EventQrClient({ eventId, eventName = "", initialError = "" }) {
+export default function EventQrClient({
+  eventId,
+  eventName = "",
+  initialError = "",
+  accentColor = null,
+  bgColor = null,
+  textColor = null,
+  secondaryTextColor = null,
+}) {
   const [galleryUrl, setGalleryUrl] = useState("");
 
   useEffect(() => {
@@ -18,16 +26,22 @@ export default function EventQrClient({ eventId, eventName = "", initialError = 
   }
 
   const displayTitle = eventName || "Studio Photuna Gallery";
+  const bg      = bgColor      || "#ffffff";
+  const text    = textColor    || "#111111";
+  const accent  = accentColor  || "#111111";
+  const secondary = secondaryTextColor || "#71717a";
 
   return (
-    <main style={styles.page}>
+    <main style={{ ...styles.page, background: bg }}>
       <div style={styles.card}>
-        <p style={styles.eyebrow}>Scan to find your photo</p>
-        <h1 style={styles.title}>{displayTitle}</h1>
-        <div style={styles.qrWrap}>
-          <QRCodeImage value={galleryUrl} size={320} />
+        <p style={{ ...styles.eyebrow, color: secondary }}>Scan to find your photo</p>
+        <h1 style={{ ...styles.title, color: text }}>{displayTitle}</h1>
+        <div style={{ ...styles.qrWrap, borderColor: `${text}22` }}>
+          <QRCodeImage value={galleryUrl} size={320} fgColor={accent} />
         </div>
-        <p style={styles.caption}>Missed the QR code at your session? Scan this to browse every photo from tonight.</p>
+        <p style={{ ...styles.caption, color: secondary }}>
+          Missed the QR code at your session? Scan this to browse every photo from tonight.
+        </p>
       </div>
     </main>
   );
