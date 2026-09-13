@@ -324,8 +324,8 @@ export default function GalleryClient({ gallery, sessions = null, eventName = ""
   if (!gallery && !sessions) {
     return (
       <StatusView
-        title="Gallery not found"
-        detail="The link may be invalid or the gallery is not available."
+        title="Your gallery isn't ready yet"
+        detail="If you just visited the booth, your photos may still be uploading — please check back in a few minutes. Otherwise this link may be invalid or the gallery has expired."
       />
     );
   }
